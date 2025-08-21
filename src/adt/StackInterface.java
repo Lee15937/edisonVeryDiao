@@ -3,7 +3,7 @@ package adt;
 
 /**
  *
- * @author Ko Soon Lee
+ * @author kosoo
  * @param <T> type of elements stored in the stack.
  */
 public interface StackInterface<T> {
