@@ -31,10 +31,10 @@ public class ClinicManagementDriver {
 
             switch (choice) {
                 case 1:
-                    PatientManagement.PatientRun();
+                    //PatientManagement.PatientRun();
                     break;
                 case 2:
-                    DoctorManagement.DoctorRun();
+                    //DoctorManagement.DoctorRun();
                     break;
                 case 3:
                     break;
