@@ -95,5 +95,7 @@ public class Dao<T> {
 
         return list;
     }
+      
+      // if you want add your read file format just add at here
 
 }
