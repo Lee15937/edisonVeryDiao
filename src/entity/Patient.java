@@ -13,7 +13,7 @@ import java.util.Objects;
 public class Patient implements Iterable<Patient>, Serializable {
 
     private static final long serialVersionUID = 1L;
-
+    private static int counter = 1;
     private String patientId;
     private String IC;
     private String name;
@@ -30,7 +30,8 @@ public class Patient implements Iterable<Patient>, Serializable {
         this.patientId = patientId;
     }
 
-    public Patient(String IC, String name, String gender, int age, String phoneNo) {
+    public Patient(String patientId, String IC, String name, String gender, int age, String phoneNo) {
+        this.patientId = Patient.generateNewId();
         this.IC = IC;
         this.name = name;
         this.gender = gender;
@@ -38,15 +39,13 @@ public class Patient implements Iterable<Patient>, Serializable {
         this.phoneNo = phoneNo;
         this.date = new Date();
     }
+    
+    public static String generateNewId() {
+        return String.format("P%03d", counter++);
+    }
 
-    public Patient(String patientId, String IC, String name, String gender, int age, String phoneNo) {
-        this.patientId = patientId;
-        this.IC = IC;
-        this.name = name;
-        this.gender = gender;
-        this.age = age;
-        this.phoneNo = phoneNo;
-        this.date = new Date();
+    public static void setCounter(int newCounter) {
+        counter = newCounter;
     }
 
     public Date getDate() {
