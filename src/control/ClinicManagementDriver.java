@@ -127,11 +127,13 @@ public class ClinicManagementDriver {
                     //DoctorManagement.DoctorRun();
                     break;
                 case 3:
+                    // Consultation
                     break;
                 case 4:
                     MedicalTreatment.MedicalTreatmentRun();
                     break;
                 case 5:
+                    // Pharmacy
                     break;
                 case 6:
                     System.out.println("Exiting...");
