@@ -16,7 +16,7 @@ import utility.MessageUI;
  */
 public class MedicalTreatment {
 
-    private MessageUI messageUI = new MessageUI(); //display UI message
+    private MessageUI messageUI = new MessageUI();
     private MedicalTreatmentUI medicalTreatmentUI = new MedicalTreatmentUI();
     private Command command = new Command();
     private int diagnosisCounter = 1;

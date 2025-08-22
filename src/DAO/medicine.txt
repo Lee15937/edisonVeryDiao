@@ -1,0 +1,3 @@
+M001#Paracetamol#92#5.5
+M002#Ibuprofen#50#8.0
+M003#Amoxicillin#30#12.0
