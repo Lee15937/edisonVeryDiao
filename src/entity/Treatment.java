@@ -11,8 +11,8 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     private static final long serialVersionUID = 1L;
 
     private String treatmentId;
-    private String patientId;
-    private String doctorId; // wait sohai edison done the consultation if he does not done i died :)
+    private String patientName;
+    private String doctorName; // wait sohai edison done the consultation if he does not done i died :)
     private String diagnosis;
     private String treatmentDetails;
     private Date treatmentDate;
@@ -27,10 +27,10 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentId = treatmentId;
     }
 
-    public Treatment(String treatmentId, String patientId, String doctorId, String diagnosis, String treatmentDetails) {
+    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails) {
         this.treatmentId = treatmentId;
-        this.patientId = patientId;
-        this.doctorId = doctorId;
+        this.patientName = patientName;
+        this.doctorName = doctorName;
         this.diagnosis = diagnosis;
         this.treatmentDetails = treatmentDetails;
         this.treatmentDate = new Date();   // current date
@@ -44,20 +44,20 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentId = treatmentId;
     }
 
-    public String getPatientId() {
-        return patientId;
+    public String getPatientName() {
+        return patientName;
     }
 
-    public void setPatientId(String patientId) {
-        this.patientId = patientId;
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
     }
 
-    public String getDoctorId() {
-        return doctorId;
+    public String getDoctorName() {
+        return doctorName;
     }
 
-    public void setDoctorId(String doctorId) {
-        this.doctorId = doctorId;
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
     }
 
     public String getDiagnosis() {
@@ -90,7 +90,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
 
     @Override
     public String toString() {
-        return treatmentId + "#" + patientId + "#" + doctorId + "#" + diagnosis + "#" + treatmentDetails + "#" + treatmentDate + "#";
+        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + treatmentDate + "#";
     }
 
     @Override
