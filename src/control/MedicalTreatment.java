@@ -8,6 +8,7 @@ import boundary.MedicalTreatmentUI;
 import entity.Treatment;
 import entity.Patient;
 import entity.Doctor;
+import entity.Medicine;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.InputMismatchException;
@@ -79,6 +80,7 @@ public class MedicalTreatment {
             // i just need to call the edison control to get the patient details and the doctor details at this part
             PatientRegistration patientManagement = new PatientRegistration();
             DoctorManagement doctorManagement = new DoctorManagement();
+            // wait jiawei done the read write file update
             ArrayList<Patient> Patients = patientManagement.readPatientFromFileAsArrayList();
             ArrayList<Doctor> Doctors = doctorManagement.readDoctorFromFileAsArrayList();
 
