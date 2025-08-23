@@ -1,11 +1,15 @@
 package control;
 
+import DAO.Dao;
 import adt.ArrayList;
+import adt.ArrayStack;
 import adt.DoubleLinkedList;
 import boundary.MedicalTreatmentUI;
 import entity.Treatment;
 import entity.Patient;
 import entity.Doctor;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.InputMismatchException;
 import utility.Command;
 import utility.MessageUI;
@@ -16,22 +20,11 @@ import utility.MessageUI;
  */
 public class MedicalTreatment {
 
+    private static final String FILE_NAME = "src\\DAO\\treatment.txt";
+    private Dao dao = new Dao();
     private MessageUI messageUI = new MessageUI();
-    private MedicalTreatmentUI medicalTreatmentUI = new MedicalTreatmentUI();
     private Command command = new Command();
-    private int diagnosisCounter = 1;
-
-    // Store all diagnoses in memory
-    private DoubleLinkedList<Treatment> diagnoses = new DoubleLinkedList<>();
-
-    // Store temporary/dynamic patients and doctors in memory (for now)
-    private ArrayList<Patient> patients = new ArrayList<>();
-    private ArrayList<Doctor> doctors = new ArrayList<>();
-
-    public MedicalTreatment() {
-        doctors.add(new Doctor("D001", "Dr. Wong", "017-6085158", "wong@gmail.com", "Mon-Fri", true));
-        doctors.add(new Doctor("D002", "Dr. Lim", "01-6085158", "wong@gmail.com", "Mon-Fri", true));
-    }
+    private MedicalTreatmentUI medicalTreatmentUI = new MedicalTreatmentUI();
 
     public void runTreatment() {
 
@@ -47,13 +40,13 @@ public class MedicalTreatment {
                         addDiagnosis();
                         break;
                     case 2:
-                        // update
+                        updateTreatments();
                         break;
                     case 3:
-                        // delete
+                        deleteTreatments();
                         break;
                     case 4:
-                        // search
+                        searchTreatments();
                         break;
                     case 5:
                         listTreatment();
@@ -63,7 +56,7 @@ public class MedicalTreatment {
                         break;
                     case 7:
                         // report
-                        break;    
+                        break;
                     case 8:
                         messageUI.displayExitMessage();
                         command.pressEnterToContinue();
@@ -82,46 +75,52 @@ public class MedicalTreatment {
 
     public void addDiagnosis() {
         try {
-            // 1. Generate ID
-            String id = generateDiagnosisId();
+
+            // i just need to call the edison control to get the patient details and the doctor details at this part
+            PatientRegistration patientManagement = new PatientRegistration();
+            DoctorManagement doctorManagement = new DoctorManagement();
+            ArrayList<Patient> Patients = patientManagement.readPatientFromFileAsArrayList();
+            ArrayList<Doctor> Doctors = doctorManagement.readDoctorFromFileAsArrayList();
+
+            String id = generateTreatmentId();
             System.out.println("Diagnosis ID: " + id);
 
-            // 2. Ask UI to gather treatment details
             Treatment treatment = medicalTreatmentUI.gatherTreatmentDetails();
 
             if (treatment != null) {
-                String patientId = treatment.getPatientId();
-                String doctorId = treatment.getDoctorId();
+                String patientName = treatment.getPatientName();
+                String doctorName = treatment.getDoctorName();
 
-                // 3. Validate Patient
                 boolean patientExists = false;
-                for (int i = 0; i < patients.sizeOf(); i++) {
-                    if (patients.get(i).getPatientId().equals(patientId)) {
+
+                for (Patient patient : Patients) {
+                    if (patient.getName().equals(patientName)) {
                         patientExists = true;
                         break;
                     }
                 }
 
-                // 4. Validate Doctor
                 boolean doctorExists = false;
-                for (int i = 0; i < doctors.sizeOf(); i++) {
-                    if (doctors.get(i).getDoctorId().equals(doctorId)) {
+
+                for (Doctor doctor : Doctors) {
+                    if (doctor.getName().equals(doctorName)) {
                         doctorExists = true;
                         break;
                     }
                 }
 
                 if (!patientExists || !doctorExists) {
-                    messageUI.displayInvalidMessage("Error: Patient or Doctor ID does not exist. Please provide a valid ID.");
+                    messageUI.displayInvalidMessage("Error: Patient or Doctor Name does not exist. Please provide a valid Name.");
                     command.pressEnterToContinue();
                     return;
                 }
 
-                // 5. Assign treatment ID
                 treatment.setTreatmentId(id);
 
-                // 6. Save into memory (DoubleLinkedList)
-                diagnoses.add(treatment);
+                DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
+                treatments.add(treatment);
+
+                dao.saveToFile(treatments, FILE_NAME);
 
                 messageUI.displayValidMessage("Diagnosis added successfully with ID: " + id);
                 command.pressEnterToContinue();
@@ -129,6 +128,59 @@ public class MedicalTreatment {
         } catch (Exception e) {
             messageUI.displayInvalidMessage("Error adding diagnosis: " + e.getMessage());
         }
+    }
+
+    public String generateTreatmentId() {
+        String lastId = getLastTreatmentId();
+        if (lastId == null) {
+            return "T001"; // First treatment starts from T001
+        } else {
+            int newId = Integer.parseInt(lastId.substring(1)) + 1;
+            return "T" + String.format("%03d", newId);
+        }
+    }
+
+    public String getLastTreatmentId() {
+        DoubleLinkedList<Treatment> treatments = dao.readTextFile(FILE_NAME, 1, parts -> {
+            String treatmentId = parts[0];
+
+            Treatment treatment = new Treatment();
+            treatment.setTreatmentId(treatmentId);
+            return treatment;
+        });
+
+        if (treatments.sizeOf() == 0) {
+            treatments.clear();
+            return null;
+        }
+
+        int maxId = 0;
+
+        for (int i = 0; i < treatments.sizeOf(); i++) {
+            Treatment treatment = treatments.get(i);
+            try {
+                if (treatment.getTreatmentId() != null && treatment.getTreatmentId().startsWith("T")) {
+                    int currentId = Integer.parseInt(treatment.getTreatmentId().substring(1));
+                    if (currentId > maxId) {
+                        maxId = currentId;
+                    }
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Error parsing Treatment ID: " + treatment.getTreatmentId());
+            }
+        }
+
+        treatments.clear();
+        return "T" + String.format("%03d", maxId);
+    }
+    
+    private void updateTreatments() {
+    }
+
+    private void searchTreatments() {
+    }
+
+    private void deleteTreatments() {
     }
 
     public void listTreatment() {
@@ -144,115 +196,130 @@ public class MedicalTreatment {
                 break;
             default:
                 System.out.println("Invalid choice. Please try again.");
-                listTreatment();  // Recursive call to prompt the user again
+                listTreatment(); 
         }
     }
 
     public void listTreatmentByAscending() {
-        if (diagnoses.sizeOf() > 0) {
-            medicalTreatmentUI.displayTreatmentReport(diagnoses, "All Treatments by Ascending Order");
-        } else {
-            messageUI.displayInvalidMessage("No treatments available to display.");
+        try {
+            DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
+
+            if (treatments.sizeOf() > 0) {
+                medicalTreatmentUI.displayTreatmentReport(treatments, "All Treatments by Ascending Order");
+            } else {
+                messageUI.displayInvalidMessage("No treatments available to display.");
+            }
+
+            command.pressEnterToContinue();
+        } catch (Exception e) {
+            messageUI.displayInvalidMessage("Error listing treatments: " + e.getMessage());
+            command.pressEnterToContinue();
         }
-        command.pressEnterToContinue();
     }
-    
+
     public void listTreatmentByDescending() { // id by decending
-        ArrayList<Treatment> descendingList = new ArrayList<>(); // for decending also array stack no list
-
-        for (int i = diagnoses.sizeOf(); i > 0; i--) {
-            descendingList.add(diagnoses.get(i));
+        ArrayStack<Treatment> treatments = readTreatmentFromFileAsArrayStack();// for decending also array stack no list
+        ArrayList<Treatment> newTreatments = new ArrayList<>();
+        while (!treatments.isEmpty()) {
+            newTreatments.add(treatments.pop());
         }
-
-        if (!descendingList.isEmpty()) {
-            medicalTreatmentUI.displayTreatmentReport(descendingList, "All Treatments by Descending Order");
+        if (!newTreatments.isEmpty()) {
+            medicalTreatmentUI.displayTreatmentReport(newTreatments, "All Treatments List by Descending Order");
             command.pressEnterToContinue();
         } else {
-            messageUI.displayInvalidMessage("No treatments available to display.");
+            messageUI.displayInvalidMessage("No Treatments available to display.");
             command.pressEnterToContinue();
         }
     }
 
     public void filterTreatment() {
         String choice = medicalTreatmentUI.getFilterChoice();
-        String id = null;
 
         switch (choice) {
+
             case "1":
-                id = medicalTreatmentUI.getUserInput("Enter Doctor ID (or 'X' to exit): ",
-                        "Error: Doctor ID cannot be blank.");
-                if (id == null) {
-                    return;
-                }
+                filterTreatmentByDoctor();
                 break;
             case "2":
-                id = medicalTreatmentUI.getUserInput("Enter Patient ID (or 'X' to exit): ",
-                        "Error: Patient ID cannot be blank.");
-                if (id == null) {
-                    return;
-                }
+                filterTreatmentByPatient();
                 break;
-            case "4": // Exit
-                return;
-            default:
-                messageUI.displayInvalidMessage("Invalid filter choice.");
+            case "3":
+                filterLast10Treatments();
+                break;
+            case "4":
+                messageUI.displayValidMessage("Exit...");
                 command.pressEnterToContinue();
                 return;
+            default:
+                messageUI.displayInvalidMessage("Invalid choice. Please try again.");
+                filterTreatment();
         }
-
-        DoubleLinkedList<Treatment> filteredList = new DoubleLinkedList<>();
-
-        for (int i = 0; i < diagnoses.sizeOf(); i++) {
-            Treatment t = diagnoses.get(i);
-            if (choice.equals("1") && t.getDoctorId().equalsIgnoreCase(id)) {
-                filteredList.add(t);
-            } else if (choice.equals("2") && t.getPatientId().equalsIgnoreCase(id)) {
-                filteredList.add(t);
-            }
-        }
-
-        // Display result
-        if (filteredList.sizeOf() > 0) {
-            medicalTreatmentUI.displayTreatmentReport(filteredList,
-                    "Filtered Treatments by " + (choice.equals("1") ? "Doctor ID" : "Patient ID"));
-        } else {
-            messageUI.displayInvalidMessage("No treatments found for given ID.");
-        }
-
-        command.pressEnterToContinue();
     }
 
+    private void filterTreatmentByDoctor() {
+    }
+
+    private void filterTreatmentByPatient() {
+    }
+
+    
     private void filterLast10Treatments() { // need stack
-        // Temporary list to hold last 10 treatments
-        ArrayList<Treatment> last10Treatments = new ArrayList<>();
+        ArrayStack<Treatment> treatmentStack = readTreatmentFromFileAsArrayStack();
 
-        // Count treatments in memory
-        int total = diagnoses.sizeOf();
-        int count = 0;
+        ArrayList<Treatment> latest10Treatments = new ArrayList<>();
 
-        // Traverse from the end (latest treatment)
-        for (int i = total; i > 0 && count < 10; i--) {
-            Treatment treatment = diagnoses.get(i); // assuming your DLL supports index access
-            last10Treatments.add(treatment);
-            count++;
+        while (!treatmentStack.isEmpty() && latest10Treatments.sizeOf() < 10) {
+            latest10Treatments.add(treatmentStack.pop());
         }
 
-        if (!last10Treatments.isEmpty()) {
-            medicalTreatmentUI.displayTreatmentReport(last10Treatments, "Last 10 Treatment Records");
+        if (!latest10Treatments.isEmpty()) {
+            medicalTreatmentUI.displayTreatmentReport(latest10Treatments, "Latest 10 Treatment Registration Records");
             command.pressEnterToContinue();
         } else {
-            messageUI.displayInvalidMessage("No treatments found.");
+            messageUI.displayInvalidMessage("No treatment record found.");
             command.pressEnterToContinue();
         }
+
+        latest10Treatments.clear();
+        treatmentStack.clear();
     }
 
-    private String generateDiagnosisId() {
-        return "T" + String.format("%03d", diagnosisCounter++);
+    private DoubleLinkedList<Treatment> readTreatmentFromFileAsDLL() {
+        return dao.readTextFile(FILE_NAME, 6, this::parseTreatmentFromParts);
+    }
+
+    private ArrayStack<Treatment> readTreatmentFromFileAsArrayStack() {
+        return dao.readTextFileAsArrayStack(FILE_NAME, 6, this::parseTreatmentFromParts);
+    }
+
+    ArrayList<Treatment> readTreatmentFromFileAsArrayList() {
+        return dao.readTextFileAsArrayList(FILE_NAME, 6, this::parseTreatmentFromParts);
+    }
+
+    private Treatment parseTreatmentFromParts(String[] parts) {
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        try {
+            String id = parts[0];
+            String patientName = parts[1];
+            String doctorName = parts[2];
+            String diagnosis = parts[3];
+            String treatmentDetails = parts[4];
+            Date date = sdf.parse(parts[5]);
+
+            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails);
+            treatment.setTreatmentDate(new Date());
+            return treatment;
+        } catch (Exception e) {
+            System.err.println("Error parsing doctor record: " + e.getMessage());
+            return null;
+        }
     }
 
     public static void MedicalTreatmentRun() {
         MedicalTreatment medicalTreatment = new MedicalTreatment();
         medicalTreatment.runTreatment();
     }
+
+    
 
 }
