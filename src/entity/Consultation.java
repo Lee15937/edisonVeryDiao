@@ -8,7 +8,7 @@ public class Consultation implements Comparable<Consultation> {
     private static final AtomicInteger COUNTER = new AtomicInteger(1000);
     // Auto-increment ID starting from 1000
 
-    private final int consultationID;
+    private final String consultationID;
     private String patientName;
     private String doctorName;
     private String date; // Format: YYYY-MM-DD
@@ -20,17 +20,30 @@ public class Consultation implements Comparable<Consultation> {
         SCHEDULED, CHECKED_IN, COMPLETED
     }
 
+    public Consultation(String consultationID, String patientName, String doctorName, String date, String time, Status status) {
+        this.consultationID = consultationID; // uses ID from file
+        this.patientName = patientName;
+        this.doctorName = doctorName;
+        this.date = date;
+        this.time = time;
+        this.status = status;
+    }
+
     public Consultation(String patientName, String doctorName, String date, String time) {
-        this.consultationID = COUNTER.getAndIncrement(); // assign unique ID
+        this.consultationID = generateConsultationID(); // assign unique ID
         this.patientName = patientName;
         this.doctorName = doctorName;
         this.date = date;
         this.time = time;
         this.status = Status.SCHEDULED;
     }
+    
+    private String generateConsultationID() {
+        return "C" + COUNTER.getAndIncrement();
+    }
 
     // Getters
-    public int getConsultationID() {
+    public String getConsultationID() {
         return consultationID;
     }
 
@@ -57,6 +70,22 @@ public class Consultation implements Comparable<Consultation> {
     // Update status
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public void setPatientName(String patientName) {
+        this.patientName = patientName;
+    }
+
+    public void setDoctorName(String doctorName) {
+        this.doctorName = doctorName;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 
     // Compare two consultations by date, then time

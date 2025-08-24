@@ -44,7 +44,7 @@ public class ConsultationUI {
         System.out.println("           Search Consultation              ");
         System.out.println("============================================");
         System.out.println("1. Search by date and time");
-        System.out.println("2. Search by IC");
+        System.out.println("2. Search by Patient");
         System.out.println("3. Search by Doctor");
         System.out.println("4. Exit");
 
@@ -61,11 +61,11 @@ public class ConsultationUI {
 
     }
 
-    public int getConsultationIDInput() {
-        System.out.print("Enter Consultation ID : ");
-        int id = scanner.nextInt();
+    public String getConsultationIDInput() {
+        System.out.print("Enter Consultation ID (Enter 0 to cancel): ");
+        
+        return new Scanner(System.in).nextLine().trim();
 
-        return id;
     }
 
     public String getPatientInput() {

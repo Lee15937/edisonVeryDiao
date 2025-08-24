@@ -147,6 +147,39 @@ public class Dao<T> {
 
         return list;
     }
+    
+    public boolean updateRecordInFile(String fileName, String recordId, int fieldIndexToUpdate, String newValue) {
+        ArrayList<String> lines = new ArrayList<>();
+        boolean updated = false;
 
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("#"); // Adjust delimiter if needed
+                if (parts.length > fieldIndexToUpdate && parts[0].trim().equalsIgnoreCase(recordId)) {
+                    parts[fieldIndexToUpdate] = newValue; // Update the specific field
+                    line = String.join("#", parts);
+                    updated = true;
+                }
+                lines.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        // Rewrite the file with updated data
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            for (String l : lines) {
+                writer.write(l);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        return updated;
+    }
     // if you want add your read file format just add at here
 }

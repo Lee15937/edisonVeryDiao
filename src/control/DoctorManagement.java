@@ -112,14 +112,15 @@ public class DoctorManagement {
             String gender = parts[2].trim().toUpperCase();
             String phoneNo = parts[3].trim();
             String email = parts[4].trim();
-            boolean availability = Boolean.parseBoolean(parts[5].trim());
+            String dutySchedule = parts[5].trim(); // NEW: duty schedule field
+            boolean availability = Boolean.parseBoolean(parts[6].trim());
 
-            Doctor doctor = new Doctor(doctorId, name, gender, phoneNo, email, availability);
+            Doctor doctor = new Doctor(doctorId, name, gender, phoneNo, email, dutySchedule, availability);
 
-            if (parts.length > 6 && !parts[5].trim().isEmpty()) {
+            if (parts.length > 7 && !parts[7].trim().isEmpty()) {
                 try {
                     SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
-                    Date date = sdf.parse(parts[6].trim());
+                    Date date = sdf.parse(parts[7].trim());
                     doctor.setDate(date);
                 } catch (ParseException e) {
                     doctor.setDate(new Date());
@@ -136,7 +137,7 @@ public class DoctorManagement {
     }
 
     public ArrayList<Doctor> readDoctorFromFileAsArrayList() {
-        return dao.readTextFileAsArrayList(DOCTOR_FILE, 6, this::doctorMapper);
+        return dao.readTextFileAsArrayList(DOCTOR_FILE, 7, this::doctorMapper);
     }
 
     public void saveDoctorsToFile() {
