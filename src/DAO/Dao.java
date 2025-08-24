@@ -38,6 +38,44 @@ public class Dao<T> {
         }
     }
 
+    public <T extends Comparable<T>> void saveToFile(SortedLinkedList<T> list, String FILE_NAME) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
+            for (T item : list) { // ✅ since your SortedLinkedList implements Iterable
+                if (item != null) {
+                    writer.write(item.toString());
+                    writer.newLine();
+                } else {
+                    System.out.println("Warning: Encountered null item while saving.");
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static <T extends Comparable<T>> SortedLinkedList<T> readTextFileAsSortedLinkedList(String fileName, int expectedLength, Function<String[], T> objectMapper) {
+        SortedLinkedList<T> list = new SortedLinkedList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split("#");
+                if (parts.length >= expectedLength) {
+                    T object = objectMapper.apply(parts);
+                    if (object != null) {
+                        list.add(object); // ✅ SortedLinkedList auto places item in order
+                    }
+                } else {
+                    System.out.println("Skipping invalid line: " + line);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
     public static <T> DoubleLinkedList<T> readTextFile(String fileName, int expectedLength, Function<String[], T> objectMapper) {
         DoubleLinkedList<T> list = new DoubleLinkedList<>();
 
