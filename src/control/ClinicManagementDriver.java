@@ -125,7 +125,7 @@ public class ClinicManagementDriver {
 
                     break;
                 case 2:
-                    //DoctorManagement.DoctorRun();
+                    DoctorManagement.DoctorManagementRun();
                     break;
                 case 3:
                     ConsultationUI ui = new ConsultationUI();
