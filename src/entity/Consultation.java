@@ -114,7 +114,6 @@ public class Consultation implements Comparable<Consultation> {
 
     @Override
     public String toString() {
-        return String.format("%-10d %-12s %-8s %-20s %-20s %-15s",
-                consultationID, date, time, patientName, doctorName, status);
+        return consultationID + "#" + date + "#" + time + "#" + patientName + "#" + doctorName + "#" + status + "#";
     }
 }
