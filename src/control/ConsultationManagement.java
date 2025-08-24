@@ -1,4 +1,4 @@
-package Control;
+package control;
 
 import adt.SortedLinkedList;
 import boundary.ConsultationUI;
@@ -281,46 +281,5 @@ public class ConsultationManagement {
 
     public void generateReport() {
         // TODO: implement
-    }
-
-    public static void main(String[] args) {
-        ConsultationUI ui = new ConsultationUI();
-        ConsultationManagement cm = new ConsultationManagement();
-
-        boolean exit = false;
-        while (!exit) {
-            ui.displayConsultationMenu();
-            int choice = ui.getChoice();
-            switch (choice) {
-                case 1:
-                    cm.addConsultation();
-                    break;
-                case 2:
-                    cm.updateConsultation();
-                    break;
-                case 3:
-                    cm.cancelAppointment();
-                    break;
-                case 4:
-                    cm.searchAppointment();
-                    break;
-                case 5:
-                    cm.listAwaitingAppointment();
-                    break;
-                case 6:
-                    cm.listConsultations();
-                    break;
-                case 7:
-                    cm.generateReport();
-                    break;
-                case 8:
-                    System.out.println("Exiting... Goodbye!");
-                    exit = true;
-                    break;
-                default:
-                    System.out.println("Invalid choice, please try again.");
-            }
-            System.out.println();
-        }
     }
 }

@@ -2,7 +2,7 @@ package boundary;
 
 import java.util.Scanner;
 import adt.SortedLinkedList;
-import control.;
+import control.ConsultationManagement;
 import adt.SortedLinkedListInterface;
 
 public class ConsultationUI {

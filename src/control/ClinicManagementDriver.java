@@ -4,6 +4,7 @@
  */
 package control;
 
+import boundary.ConsultationUI;
 import java.util.Scanner;
 import boundary.PatientRegistrationForm;
 import entity.Patient;
@@ -121,13 +122,50 @@ public class ClinicManagementDriver {
                         }
 
                     } while (patientChoice != 7);
-                    
+
                     break;
                 case 2:
                     //DoctorManagement.DoctorRun();
                     break;
                 case 3:
-                    // Consultation
+                    ConsultationUI ui = new ConsultationUI();
+                    ConsultationManagement cm = new ConsultationManagement();
+
+                    boolean exit = false;
+                    while (!exit) {
+                        ui.displayConsultationMenu();
+                        int choices = ui.getChoice();
+                        switch (choices) {
+                            case 1:
+                                cm.addConsultation();
+                                break;
+                            case 2:
+                                cm.updateConsultation();
+                                break;
+                            case 3:
+                                cm.cancelAppointment();
+                                break;
+                            case 4:
+                                cm.searchAppointment();
+                                break;
+                            case 5:
+                                cm.listAwaitingAppointment();
+                                break;
+                            case 6:
+                                cm.listConsultations();
+                                break;
+                            case 7:
+                                cm.generateReport();
+                                break;
+                            case 8:
+                                System.out.println("Exiting... Goodbye!");
+                                exit = true;
+                                break;
+                            default:
+                                System.out.println("Invalid choice, please try again.");
+                        }
+                        System.out.println();
+                    }
                     break;
                 case 4:
                     MedicalTreatment.MedicalTreatmentRun();
