@@ -15,6 +15,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     private String doctorName; // wait sohai edison done the consultation if he does not done i died :)
     private String diagnosis;
     private String treatmentDetails;
+    private boolean paymentStatus;
     private Date treatmentDate;
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
@@ -27,12 +28,13 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentId = treatmentId;
     }
 
-    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails) {
+    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails, boolean paymentStatus) {
         this.treatmentId = treatmentId;
         this.patientName = patientName;
         this.doctorName = doctorName;
         this.diagnosis = diagnosis;
         this.treatmentDetails = treatmentDetails;
+        this.paymentStatus = paymentStatus;
         this.treatmentDate = new Date();   // current date
     }
 
@@ -76,6 +78,14 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentDetails = treatmentDetails;
     }
 
+    public boolean isPaymentStatus() {
+        return paymentStatus;
+    }
+
+    public void setPaymentStatus(boolean paymentStatus) {
+        this.paymentStatus = paymentStatus;
+    }
+    
     public Date getTreatmentDate() {
         return treatmentDate;
     }
@@ -90,7 +100,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
 
     @Override
     public String toString() {
-        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + treatmentDate + "#";
+        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + treatmentDate + "#" + (paymentStatus ? "Pay" : "Unpay");
     }
 
     @Override

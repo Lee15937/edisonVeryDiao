@@ -4,6 +4,8 @@
  */
 package boundary;
 
+import DAO.Dao;
+import adt.ArrayList;
 import adt.ListInterface;
 import control.DoctorManagement;
 import entity.Doctor;
@@ -22,9 +24,12 @@ public class DoctorManagementUI {
     Scanner scanner = new Scanner(System.in);
     public static int doctorIdCounter = 1;
     public adt.ArrayList<Doctor> doctors = new adt.ArrayList<>();
+    private Dao<Doctor> dao = new Dao<>();
+
+    public static final String DOCTOR_FILE = "src/DAO/doctor.txt";
 
     public void runDoctorsManagement() {
-
+        doctorList = doctorMgmt.readDoctorFromFileAsArrayList();
         int choice = -1;
         do {
             System.out.println("\nDoctor Management Menu:");
@@ -46,6 +51,7 @@ public class DoctorManagementUI {
 
             switch (choice) {
                 case 1:
+                    doctorMgmt.loadDoctorsFromFile();
                     addDoctor();
                     break;
                 case 2:
@@ -111,7 +117,7 @@ public class DoctorManagementUI {
             if (phoneNo.matches("\\d{10,15}")) {
                 break;
             }
-            System.out.println("Invalid phone number. Please enter digits only (10–15 characters).");
+            System.out.println("Invalid phone number. Please enter digits only (10â€“15 characters).");
         }
 
         while (true) {
@@ -151,7 +157,7 @@ public class DoctorManagementUI {
         doctorList.add(newDoctor);
 
         if (doctorMgmt != null) {
-            doctorMgmt.saveDoctorsToFile();
+            dao.saveToFile(doctorList, DOCTOR_FILE);
         }
 
         System.out.println("Doctor added successfully: " + newDoctor.getName());
@@ -162,10 +168,10 @@ public class DoctorManagementUI {
             System.out.print("Enter Doctor ID: ");
             String id = scanner.nextLine().trim();
 
+            ArrayList<Doctor> doctors = doctorMgmt.readDoctorFromFileAsArrayList();
             Doctor foundDoctor = null;
 
-            for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-                Doctor d = doctorList.getEntry(i);
+            for (Doctor d : doctors) {
                 if (d.getDoctorId().equalsIgnoreCase(id)) {
                     foundDoctor = d;
                     break;
@@ -180,32 +186,22 @@ public class DoctorManagementUI {
                 System.out.println("Phone Number : " + foundDoctor.getPhoneNo());
                 System.out.println("Email        : " + foundDoctor.getEmail());
                 System.out.println("Duty Schedule: " + foundDoctor.getDutySchedule());
+                System.out.println("Availability : " + (foundDoctor.isAvailability() ? "Available" : "Not Available"));
+
                 for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
                     DoctorEvent event = doctorEventList.getEntry(i);
-
-                    Doctor doc = null;
-                    for (int j = 1; j <= doctorList.getNumberOfEntries(); j++) {
-                        Doctor tempDoc = doctorList.getEntry(j);
-                        if (tempDoc.getDoctorId().equals(event.getDoctorId())) {
-                            doc = tempDoc;
-                            break;
-                        }
-                    }
-
-                    if (doc != null) {
+                    if (event.getDoctorId().equalsIgnoreCase(foundDoctor.getDoctorId())) {
                         boolean firstLine = true;
                         for (TimeRange tr : event.getShiftRanges()) {
                             if (firstLine) {
-                                System.out.println("Duty Schedule: " + tr.toString());
+                                System.out.println("Shift        : " + tr.toString());
                                 firstLine = false;
                             } else {
                                 System.out.println("               " + tr.toString());
                             }
-
                         }
                     }
                 }
-                System.out.println("Availability : " + (foundDoctor.isAvailability() ? "Available" : "Not Available"));
                 break;
             } else {
                 ChoiceYesOrNo();
@@ -214,6 +210,7 @@ public class DoctorManagementUI {
     }
 
     public void doctorManagementList(ListInterface<Doctor> dortorList, ListInterface<DoctorEvent> dortorEventList) {
+        doctorMgmt.getDoctorList();
         String header1 = String.format("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
                 "ID", "Name", "Gender", "Phone Number", "Email", "Availability");
         String header2 = String.format("| %-10s | %-20s | %-25s |\n",
@@ -390,7 +387,7 @@ public class DoctorManagementUI {
         }
 
         if (selectedDoctor == null) {
-            System.out.println("❌ Doctor with ID " + doctorId + " not found.");
+            System.out.println("â�Œ Doctor with ID " + doctorId + " not found.");
             return;
         }
 
@@ -427,7 +424,7 @@ public class DoctorManagementUI {
             }
         }
         if (targetDoctor == null) {
-            System.out.println("❌ Doctor not found.");
+            System.out.println("â�Œ Doctor not found.");
             return;
         }
 
@@ -491,12 +488,17 @@ public class DoctorManagementUI {
             return;
         }
 
-        DoctorEvent newShift = DoctorEvent.Shift(doctorId, name, convertToJavaList(assignedShifts));
+        java.util.List<TimeRange> shiftList = new java.util.ArrayList<>();
+        for (int i = 1; i <= assignedShifts.getNumberOfEntries(); i++) {
+            shiftList.add(assignedShifts.getEntry(i));
+        }
+
+        DoctorEvent newShift = DoctorEvent.Shift(doctorId, name, shiftList);
         doctorEventList.add(newShift);
 
         System.out.println("Shifts assigned to Doctor " + name + ":");
-        for (int i = 1; i <= assignedShifts.getNumberOfEntries(); i++) {
-            System.out.println(" - " + assignedShifts.getEntry(i));
+        for (TimeRange tr : shiftList) {
+            System.out.println(" - " + tr);
         }
     }
 
@@ -510,7 +512,7 @@ public class DoctorManagementUI {
             }
         }
         if (targetDoctor == null) {
-            System.out.println("❌ Doctor not found.");
+            System.out.println("â�Œ Doctor not found.");
             return;
         }
 
@@ -558,14 +560,6 @@ public class DoctorManagementUI {
         LocalDate endDate = startDate.plusDays(days);
         System.out.printf("Doctor %s is on leave from %s to %s. Reason: %s\n",
                 name, startDate, endDate, reason);
-    }
-
-    private <E> java.util.List<E> convertToJavaList(ListInterface<E> adtList) {
-        java.util.List<E> result = new java.util.ArrayList<>();
-        for (int i = 1; i <= adtList.getNumberOfEntries(); i++) {
-            result.add(adtList.getEntry(i));
-        }
-        return result;
     }
 
     public void summaryReports(ListInterface<Doctor> dortorList) {
@@ -618,9 +612,10 @@ public class DoctorManagementUI {
             System.out.print("Enter Doctor ID: ");
             String id = scanner.nextLine().trim();
 
+            ArrayList<Doctor> doctors = doctorMgmt.readDoctorFromFileAsArrayList();
             Doctor foundDoctor = null;
-            for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-                Doctor d = doctorList.getEntry(i);
+
+            for (Doctor d : doctors) {
                 if (d.getDoctorId().equalsIgnoreCase(id)) {
                     foundDoctor = d;
                     break;
@@ -630,7 +625,7 @@ public class DoctorManagementUI {
             if (foundDoctor != null) {
                 return id;
             } else {
-                System.out.println("\nDoctor Not Found");
+                System.out.println("\nâ�Œ Doctor with ID " + id + " not found.");
                 ChoiceYesOrNo();
             }
         }
@@ -665,21 +660,7 @@ public class DoctorManagementUI {
         }
 
         while (true) {
-            System.out.print("Enter new gender (M/F) (leave blank to keep '" + doc.getGender() + "'): ");
-            String newGender = scanner.nextLine().trim().toUpperCase();
-            if (newGender.isEmpty()) {
-                break;
-            }
-            if (newGender.equals("M") || newGender.equals("F")) {
-                doc.setGender(newGender);
-                break;
-            } else {
-                System.out.println("\nInvalid format.");
-            }
-        }
-
-        while (true) {
-            System.out.print("Enter new phone number (10–15 digits) (leave blank to keep '" + doc.getPhoneNo() + "'): ");
+            System.out.print("Enter new phone number (10â€“15 digits) (leave blank to keep '" + doc.getPhoneNo() + "'): ");
             String newPhone = scanner.nextLine().trim();
             if (newPhone.isEmpty()) {
                 break;
@@ -739,7 +720,7 @@ public class DoctorManagementUI {
             System.out.println("\nInvalid format.");
         }
 
-        doctorMgmt.saveDoctorsToFile();
+        dao.saveToFile(doctorList, DOCTOR_FILE);
         System.out.println("\nDoctor Updated Successfully.");
     }
 
@@ -762,24 +743,23 @@ public class DoctorManagementUI {
         }
 
         if (doc == null) {
-            System.out.println("Doctor not found.");
+            System.out.println("â�Œ Doctor not found.");
             return;
         }
 
         System.out.print("Are you sure you want to remove Dr. " + doc.getName() + " (Y/N)? ");
         String confirm = scanner.nextLine().trim();
         if (!confirm.equalsIgnoreCase("Y")) {
-            System.out.println("❌ Removal cancelled.");
+            System.out.println("â�Œ Removal cancelled.");
             return;
         }
 
         Doctor removed = doctorList.remove(indexToRemove);
         if (removed != null) {
-            doctorMgmt.saveDoctorsToFile();
-            System.out.println("✅ Doctor " + doc.getName() + " removed successfully.");
+            dao.saveToFile(doctorList, DOCTOR_FILE);
+            System.out.println("âœ… Doctor " + doc.getName() + " removed successfully.");
         } else {
-            System.out.println("❌ Failed to remove doctor.");
+            System.out.println("â�Œ Failed to remove doctor.");
         }
     }
-
 }

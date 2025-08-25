@@ -89,19 +89,25 @@ public class DoctorManagement {
     public void loadDoctorsFromFile() {
         ArrayList<Doctor> loadedDoctors = dao.readTextFileAsArrayList(DOCTOR_FILE, 6, this::doctorMapper);
 
-        for (int i = 0; i < loadedDoctors.sizeOf(); i++) {
-            Doctor doctor = loadedDoctors.get(i);
-            if (doctor != null) {
-                doctorList.add(doctor);
+        if (loadedDoctors != null) {
+            for (int i = 0; i < loadedDoctors.sizeOf(); i++) {
+                Doctor doctor = loadedDoctors.get(i);
+                if (doctor != null) {
+                    doctorList.add(doctor);
+                }
             }
         }
 
-        System.out.println("✅ Loaded " + doctorList.getNumberOfEntries() + " doctors.");
+        System.out.println("Loaded " + doctorList.getNumberOfEntries() + " doctors.");
 
         if (doctorList.getNumberOfEntries() > 0) {
             Doctor lastDoctor = doctorList.getEntry(doctorList.getNumberOfEntries());
             String lastId = lastDoctor.getDoctorId();
-            int lastNum = Integer.parseInt(lastId.substring(1));
+
+            DoctorManagementUI doctorMgmtUI = new DoctorManagementUI();
+
+            doctorMgmtUI.doctorIdCounter = Integer.parseInt(lastId.substring(1)) + 1;
+
         }
     }
 
@@ -109,40 +115,26 @@ public class DoctorManagement {
         try {
             String doctorId = parts[0].trim();
             String name = parts[1].trim();
-            String gender = parts[2].trim().toUpperCase();
+            String gender = parts[2].trim();
             String phoneNo = parts[3].trim();
             String email = parts[4].trim();
-            String dutySchedule = parts[5].trim(); // NEW: duty schedule field
-            boolean availability = Boolean.parseBoolean(parts[6].trim());
+            String dutySchedule = parts[5].trim();
+            boolean availability = parts[6].trim().equalsIgnoreCase("Available");
 
-            Doctor doctor = new Doctor(doctorId, name, gender, phoneNo, email, dutySchedule, availability);
-
-            if (parts.length > 7 && !parts[7].trim().isEmpty()) {
-                try {
-                    SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy", Locale.ENGLISH);
-                    Date date = sdf.parse(parts[7].trim());
-                    doctor.setDate(date);
-                } catch (ParseException e) {
-                    doctor.setDate(new Date());
-                }
-            } else {
-                doctor.setDate(new Date());
-            }
-
-            return doctor;
+            return new Doctor(doctorId, name, gender, phoneNo, email, dutySchedule, availability);
         } catch (Exception e) {
-            System.out.println("Error parsing doctor record: " + String.join("#", parts));
+            System.out.println("âš ï¸� Error parsing doctor record: " + String.join("#", parts));
             return null;
         }
     }
 
     public ArrayList<Doctor> readDoctorFromFileAsArrayList() {
-        return dao.readTextFileAsArrayList(DOCTOR_FILE, 7, this::doctorMapper);
+        return dao.readTextFileAsArrayList(DOCTOR_FILE, 6, this::doctorMapper);
     }
 
     public void saveDoctorsToFile() {
         dao.saveToFile(doctorList, DOCTOR_FILE);
-        System.out.println("✅ Doctor data saved.");
+        System.out.println("Doctor data saved.");
     }
 
     public static void DoctorManagementRun() {

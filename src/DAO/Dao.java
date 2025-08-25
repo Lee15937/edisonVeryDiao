@@ -40,7 +40,7 @@ public class Dao<T> {
 
     public <T extends Comparable<T>> void saveToFile(SortedLinkedList<T> list, String FILE_NAME) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (T item : list) { // ✅ since your SortedLinkedList implements Iterable
+            for (T item : list) { // since your SortedLinkedList implements Iterable
                 if (item != null) {
                     writer.write(item.toString());
                     writer.newLine();
@@ -63,7 +63,7 @@ public class Dao<T> {
                 if (parts.length >= expectedLength) {
                     T object = objectMapper.apply(parts);
                     if (object != null) {
-                        list.add(object); // ✅ SortedLinkedList auto places item in order
+                        list.add(object); //SortedLinkedList auto places item in order
                     }
                 } else {
                     System.out.println("Skipping invalid line: " + line);
@@ -181,5 +181,4 @@ public class Dao<T> {
 
         return updated;
     }
-    // if you want add your read file format just add at here
 }

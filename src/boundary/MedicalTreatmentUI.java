@@ -52,7 +52,7 @@ public class MedicalTreatmentUI {
         return choice;
     }
 
-    public Treatment gatherTreatmentDetails() {
+            public Treatment gatherTreatmentDetails() {
         String patientName = getUserInput("Enter Patient Name (or 'X' to exit): ", "Error: Patient Name cannot be blank.");
         if (patientName == null) {
             return null;
@@ -74,7 +74,7 @@ public class MedicalTreatmentUI {
         }
 
         // Assuming Diagnosis is your model class with these fields
-        return new Treatment(null, patientName, doctorName, diagnosis, treatment);
+        return new Treatment(null, patientName, doctorName, diagnosis, treatment, false);
     }
 
     public String getUserInput(String prompt, String errorMessage) {

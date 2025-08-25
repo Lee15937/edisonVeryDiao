@@ -85,7 +85,7 @@ public class MedicalTreatment {
             ArrayList<Doctor> Doctors = doctorManagement.readDoctorFromFileAsArrayList();
 
             String id = generateTreatmentId();
-            System.out.println("Diagnosis ID: " + id);
+            System.out.println("Treatment ID: " + id);
 
             Treatment treatment = medicalTreatmentUI.gatherTreatmentDetails();
 
@@ -124,11 +124,11 @@ public class MedicalTreatment {
 
                 dao.saveToFile(treatments, FILE_NAME);
 
-                messageUI.displayValidMessage("Diagnosis added successfully with ID: " + id);
+                messageUI.displayValidMessage("Treatment added successfully with ID: " + id);
                 command.pressEnterToContinue();
             }
         } catch (Exception e) {
-            messageUI.displayInvalidMessage("Error adding diagnosis: " + e.getMessage());
+            messageUI.displayInvalidMessage("Error adding Treatments: " + e.getMessage());
         }
     }
 
@@ -287,15 +287,15 @@ public class MedicalTreatment {
     }
 
     private DoubleLinkedList<Treatment> readTreatmentFromFileAsDLL() {
-        return dao.readTextFile(FILE_NAME, 6, this::parseTreatmentFromParts);
+        return dao.readTextFile(FILE_NAME, 7, this::parseTreatmentFromParts);
     }
 
     private ArrayStack<Treatment> readTreatmentFromFileAsArrayStack() {
-        return dao.readTextFileAsArrayStack(FILE_NAME, 6, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayStack(FILE_NAME, 7, this::parseTreatmentFromParts);
     }
 
     ArrayList<Treatment> readTreatmentFromFileAsArrayList() {
-        return dao.readTextFileAsArrayList(FILE_NAME, 6, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayList(FILE_NAME, 7, this::parseTreatmentFromParts);
     }
 
     private Treatment parseTreatmentFromParts(String[] parts) {
@@ -306,9 +306,10 @@ public class MedicalTreatment {
             String doctorName = parts[2];
             String diagnosis = parts[3];
             String treatmentDetails = parts[4];
-            Date date = sdf.parse(parts[5]);
+            boolean paymentStatus = parts[6].equalsIgnoreCase("Pay");
+            Date date = sdf.parse(parts[6]);
 
-            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails);
+            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails, paymentStatus);
             treatment.setTreatmentDate(new Date());
             return treatment;
         } catch (Exception e) {
