@@ -1,2 +1,5 @@
-D001#Jogn#m#0123456798#john@gmail.com#Mon-Fri 08:00-16:00#Available
-D002#Jane#f#0114567891#jane@gmail.com#Sat-Sun 10:00-18:00#Not Available
+D001#Lee#Male#0136457894#lee@gmail.com#Mon-Sun 10am-6pm#Available
+D002#Jane#Male#01456789144#jane@gmail.com#Sun-Tue 10am-4pm#Not Available
+D003#Joe#Female#0178976855#joe@gmail.com#Tue-Fri 8am-6pm#Available
+D004#Alibaba#Male#01134859393#alibaba@gmail.com#Sat-Fri 10am-4pm#Available
+D005#Amei#Female#0183783733#amei@gmail.com#Sat-Mon 8am-5pm#Not Available

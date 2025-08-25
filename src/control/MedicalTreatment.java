@@ -6,8 +6,7 @@ import adt.ArrayStack;
 import adt.DoubleLinkedList;
 import boundary.MedicalTreatmentUI;
 import entity.Treatment;
-import entity.Patient;
-import entity.Doctor;
+import entity.Consultation;
 import entity.Medicine;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -76,57 +75,54 @@ public class MedicalTreatment {
 
     public void addDiagnosis() {
         try {
+            ConsultationManagement consultationManagement = new ConsultationManagement();
+            ArrayList<Consultation> consultations = consultationManagement.readConsultationFromFileAsArrayList();
 
-            // i just need to call the edison control to get the patient details and the doctor details at this part
-            PatientRegistration patientManagement = new PatientRegistration();
-            DoctorManagement doctorManagement = new DoctorManagement();
-            // wait jiawei done the read write file update
-            ArrayList<Patient> Patients = patientManagement.readPatientFromFileAsArrayList();
-            ArrayList<Doctor> Doctors = doctorManagement.readDoctorFromFileAsArrayList();
+            if (consultations.isEmpty()) {
+                messageUI.displayInvalidMessage("No consultations found. Please create a consultation first.");
+                command.pressEnterToContinue();
+                return;
+            }
+
+            System.out.println("Select Consultation to add Diagnosis:");
+            for (int i = 0; i < consultations.sizeOf(); i++) {
+                Consultation c = consultations.get(i);
+                System.out.println((i + 1) + ". " + c.getConsultationID()
+                        + " | Patient: " + c.getPatientName()
+                        + " | Doctor: " + c.getDoctorName());
+            }
+
+            int choice = command.readInt("Enter choice (1-" + consultations.sizeOf() + "): ");
+            if (choice < 1 || choice > consultations.sizeOf()) {
+                messageUI.displayInvalidMessage("Invalid choice.");
+                return;
+            }
+
+            Consultation selectedConsultation = consultations.get(choice - 1);
 
             String id = generateTreatmentId();
             System.out.println("Treatment ID: " + id);
 
             Treatment treatment = medicalTreatmentUI.gatherTreatmentDetails();
 
-            if (treatment != null) {
-                String patientName = treatment.getPatientName();
-                String doctorName = treatment.getDoctorName();
-
-                boolean patientExists = false;
-
-                for (Patient patient : Patients) {
-                    if (patient.getName().equals(patientName)) {
-                        patientExists = true;
-                        break;
-                    }
-                }
-
-                boolean doctorExists = false;
-
-                for (Doctor doctor : Doctors) {
-                    if (doctor.getName().equals(doctorName)) {
-                        doctorExists = true;
-                        break;
-                    }
-                }
-
-                if (!patientExists || !doctorExists) {
-                    messageUI.displayInvalidMessage("Error: Patient or Doctor Name does not exist. Please provide a valid Name.");
-                    command.pressEnterToContinue();
-                    return;
-                }
-
-                treatment.setTreatmentId(id);
-
-                DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
-                treatments.add(treatment);
-
-                dao.saveToFile(treatments, FILE_NAME);
-
-                messageUI.displayValidMessage("Treatment added successfully with ID: " + id);
+            if (treatment == null) {
+                messageUI.displayInvalidMessage("Operation canceled by user.");
                 command.pressEnterToContinue();
+                return;
             }
+
+            treatment.setPatientName(selectedConsultation.getPatientName());
+            treatment.setDoctorName(selectedConsultation.getDoctorName());
+            treatment.setTreatmentId(id);
+
+            DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
+            treatments.add(treatment);
+
+            dao.saveToFile(treatments, FILE_NAME);
+
+            messageUI.displayValidMessage("Treatment added successfully with ID: " + id);
+            command.pressEnterToContinue();
+
         } catch (Exception e) {
             messageUI.displayInvalidMessage("Error adding Treatments: " + e.getMessage());
         }
@@ -175,14 +171,166 @@ public class MedicalTreatment {
         treatments.clear();
         return "T" + String.format("%03d", maxId);
     }
-    
-    private void updateTreatments() {
+
+    public void updateTreatments() {
+        try {
+            String treatmentId = medicalTreatmentUI.getTreatmentId();
+            if (treatmentId == null) {
+                messageUI.displayInvalidMessage("Operation canceled by user.");
+                return;
+            }
+
+            DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
+            Treatment treatmentToUpdate = null;
+
+            for (int i = 0; i < treatments.sizeOf(); i++) {
+                Treatment t = treatments.get(i);
+                if (t.getTreatmentId().equals(treatmentId)) {
+                    treatmentToUpdate = t;
+                    break;
+                }
+            }
+
+            if (treatmentToUpdate != null) {
+                medicalTreatmentUI.displayTreatmentDetails(treatmentToUpdate);
+
+                String choice = medicalTreatmentUI.getUpdateChoice();
+                switch (choice) {
+                    case "1":
+                        String newDiagnosis = medicalTreatmentUI.getUpdatedValue("Diagnosis Description");
+                        treatmentToUpdate.setDiagnosis(newDiagnosis);
+                        break;
+                    case "2":
+                        String newTreatment = medicalTreatmentUI.getUpdatedValue("Treatment Details");
+                        treatmentToUpdate.setTreatmentPlan(newTreatment);
+                        break;
+                    case "3":
+                        String newQuantity = medicalTreatmentUI.getUserInputWithRegex("Enter Quantity (or 'X' to exit): ",
+                                "Error: Please enter a valid quantity (numeric).", "\\d+");
+                        treatmentToUpdate.setQuantity(Integer.parseInt(newQuantity));
+                        break;
+                    case "4":
+                        String newDateStr = medicalTreatmentUI.getUpdatedValue("Follow-Up Date (yyyy-MM-dd)");
+                        try {
+                            Date newDate = new SimpleDateFormat("yyyy-MM-dd").parse(newDateStr);
+                            treatmentToUpdate.setTreatmentDate(newDate);
+                        } catch (Exception e) {
+                            messageUI.displayInvalidMessage("Invalid date format. Please use yyyy-MM-dd.");
+                            return;
+                        }
+                        break;
+                    case "5": // Exit
+                        messageUI.displayValidMessage("Returning to menu...");
+                        command.pressEnterToContinue();
+                        return;
+                    default:
+                        messageUI.displayInvalidMessage("Invalid choice.");
+                        command.pressEnterToContinue();
+                        return;
+                }
+
+                // Step 4: Save changes back
+                dao.saveToFile(treatments, FILE_NAME);
+                messageUI.displayValidMessage("Treatment details updated successfully.");
+                medicalTreatmentUI.displayTreatmentDetails(treatmentToUpdate);
+
+            } else {
+                messageUI.displayInvalidMessage("Treatment ID not found.");
+            }
+        } catch (Exception e) {
+            messageUI.displayInvalidMessage("Error updating treatment: " + e.getMessage());
+        }
+
+        command.pressEnterToContinue();
     }
 
-    private void searchTreatments() {
+    public void searchTreatments() {
+        String treatmentId = medicalTreatmentUI.getTreatmentId();
+
+        if (treatmentId == null || treatmentId.trim().isEmpty()) {
+            messageUI.displayInvalidMessage("Operation canceled by user.");
+            command.pressEnterToContinue();
+            return;
+        }
+
+        try {
+            ArrayList<Treatment> treatments = dao.readTextFileAsArrayList(FILE_NAME, 6, this::parseTreatmentFromParts);
+
+            Treatment foundTreatment = null;
+            for (Treatment t : treatments) {
+                if (t.getTreatmentId().equalsIgnoreCase(treatmentId)) {
+                    foundTreatment = t;
+                    break;
+                }
+            }
+
+            if (foundTreatment != null) {
+                System.out.println("\n\nTreatment Found: ");
+                medicalTreatmentUI.displayTreatmentDetails(foundTreatment);
+            } else {
+                messageUI.displayInvalidMessage("Treatment ID not found.");
+            }
+
+            command.pressEnterToContinue();
+        } catch (Exception e) {
+            messageUI.displayInvalidMessage("Error searching treatment: " + e.getMessage());
+            command.pressEnterToContinue();
+        }
     }
 
-    private void deleteTreatments() {
+    public void deleteTreatments() {
+
+        String treatmentId = medicalTreatmentUI.getTreatmentId();
+        if (treatmentId == null || treatmentId.trim().isEmpty()) {
+            messageUI.displayInvalidMessage("Operation canceled by user.");
+            return; // User chose to exit
+        }
+
+        Treatment userInputTreatment = new Treatment(treatmentId);
+
+        try {
+            DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
+
+            Treatment treatmentToRemove = null;
+
+            for (int i = 0; i < treatments.sizeOf(); i++) {
+                Treatment treatment = treatments.get(i);
+
+                if (treatment.equals(userInputTreatment)) {
+                    treatmentToRemove = treatment;
+                    treatments.remove(i);
+                    break;
+                }
+            }
+
+            if (treatmentToRemove != null) {
+                medicalTreatmentUI.displayTreatmentDetails(treatmentToRemove);
+
+                boolean confirmed = medicalTreatmentUI.getConfirmation(
+                        "Are you sure you want to delete this treatment? (Y/N): ");
+
+                if (confirmed) {
+                    // Save changes to file
+                    dao.saveToFile(treatments, FILE_NAME);
+                    messageUI.displayValidMessage("Treatment removed successfully.");
+                    command.pressEnterToContinue();
+
+                } else {
+                    // If cancelled, add back to list
+                    treatments.add(treatmentToRemove);
+                    messageUI.displayInvalidMessage("Treatment removal cancelled.");
+                    command.pressEnterToContinue();
+                }
+
+            } else {
+                messageUI.displayInvalidMessage("Treatment ID not found.");
+                command.pressEnterToContinue();
+            }
+
+        } catch (Exception e) {
+            messageUI.displayInvalidMessage("Error removing treatment: " + e.getMessage());
+            command.pressEnterToContinue();
+        }
     }
 
     public void listTreatment() {
@@ -198,7 +346,7 @@ public class MedicalTreatment {
                 break;
             default:
                 System.out.println("Invalid choice. Please try again.");
-                listTreatment(); 
+                listTreatment();
         }
     }
 
@@ -264,8 +412,7 @@ public class MedicalTreatment {
     private void filterTreatmentByPatient() {
     }
 
-    
-    private void filterLast10Treatments() { // need stack
+    private void filterLast10Treatments() {
         ArrayStack<Treatment> treatmentStack = readTreatmentFromFileAsArrayStack();
 
         ArrayList<Treatment> latest10Treatments = new ArrayList<>();
@@ -287,15 +434,15 @@ public class MedicalTreatment {
     }
 
     private DoubleLinkedList<Treatment> readTreatmentFromFileAsDLL() {
-        return dao.readTextFile(FILE_NAME, 7, this::parseTreatmentFromParts);
+        return dao.readTextFile(FILE_NAME, 8, this::parseTreatmentFromParts);
     }
 
     private ArrayStack<Treatment> readTreatmentFromFileAsArrayStack() {
-        return dao.readTextFileAsArrayStack(FILE_NAME, 7, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayStack(FILE_NAME, 8, this::parseTreatmentFromParts);
     }
 
     ArrayList<Treatment> readTreatmentFromFileAsArrayList() {
-        return dao.readTextFileAsArrayList(FILE_NAME, 7, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayList(FILE_NAME, 8, this::parseTreatmentFromParts);
     }
 
     private Treatment parseTreatmentFromParts(String[] parts) {
@@ -306,14 +453,15 @@ public class MedicalTreatment {
             String doctorName = parts[2];
             String diagnosis = parts[3];
             String treatmentDetails = parts[4];
+            int quantity = Integer.parseInt(parts[5]);
             boolean paymentStatus = parts[6].equalsIgnoreCase("Pay");
-            Date date = sdf.parse(parts[6]);
+            Date date = sdf.parse(parts[7]);
 
-            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails, paymentStatus);
+            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails, quantity, paymentStatus);
             treatment.setTreatmentDate(new Date());
             return treatment;
         } catch (Exception e) {
-            System.err.println("Error parsing doctor record: " + e.getMessage());
+            System.err.println("Error parsing treatment record: " + e.getMessage());
             return null;
         }
     }
@@ -322,7 +470,5 @@ public class MedicalTreatment {
         MedicalTreatment medicalTreatment = new MedicalTreatment();
         medicalTreatment.runTreatment();
     }
-
-    
 
 }

@@ -17,12 +17,44 @@ public class Command {
 
     private static Scanner scanner = new Scanner(System.in);
 
-    /**
-     * Waits for the user to press Enter to continue.
-     */
+    
     public static void pressEnterToContinue() {
         System.out.println("Press Enter key to continue...");
         scanner.nextLine(); // Waits for the user to press Enter
+    }
+
+    /**
+     * Reads an integer from the user with validation. Keeps asking until a
+     * valid integer is entered.
+     */
+    public static int readInt(String message) {
+        int value;
+        while (true) {
+            System.out.print(message);
+            try {
+                value = Integer.parseInt(scanner.nextLine().trim());
+                break; // exit loop if valid
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a valid integer.");
+            }
+        }
+        return value;
+    }
+
+    /**
+     * Reads an integer within a range (min to max).
+     */
+    public static int readInt(String message, int min, int max) {
+        int value;
+        while (true) {
+            value = readInt(message);
+            if (value >= min && value <= max) {
+                break;
+            } else {
+                System.out.println("Input must be between " + min + " and " + max + ".");
+            }
+        }
+        return value;
     }
 
     public static void cls() {

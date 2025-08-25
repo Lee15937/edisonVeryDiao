@@ -52,17 +52,7 @@ public class MedicalTreatmentUI {
         return choice;
     }
 
-            public Treatment gatherTreatmentDetails() {
-        String patientName = getUserInput("Enter Patient Name (or 'X' to exit): ", "Error: Patient Name cannot be blank.");
-        if (patientName == null) {
-            return null;
-        }
-
-        String doctorName = getUserInput("Enter Doctor Name (or 'X' to exit): ", "Error: Doctor Name cannot be blank.");
-        if (doctorName == null) {
-            return null;
-        }
-
+    public Treatment gatherTreatmentDetails() {
         String diagnosis = getUserInput("Enter Diagnosis Description (or 'X' to exit): ", "Error: Diagnosis cannot be blank.");
         if (diagnosis == null) {
             return null;
@@ -73,8 +63,14 @@ public class MedicalTreatmentUI {
             return null;
         }
 
-        // Assuming Diagnosis is your model class with these fields
-        return new Treatment(null, patientName, doctorName, diagnosis, treatment, false);
+        String qtyStr = getUserInputWithRegex("Enter Quantity (number, or 'X' to exit): ",
+                "Error: Invalid Quantity.", "\\d{1,3}");
+        if (qtyStr == null) {
+            return null;
+        }
+        int qty = Integer.parseInt(qtyStr);
+
+        return new Treatment(null, diagnosis, treatment, qty, false);
     }
 
     public String getUserInput(String prompt, String errorMessage) {
@@ -109,15 +105,30 @@ public class MedicalTreatmentUI {
         System.out.println("Which detail would you like to update?");
         System.out.println("1. Diagnosis Description");
         System.out.println("2. Treatment Details");
-        System.out.println("3. Follow-Up Date");
-        System.out.println("4. Exit");
-        System.out.print("Enter your choice (1-4): ");
+        System.out.println("3. Quantity");
+        System.out.println("4. Follow-Up Date");
+        System.out.println("5. Exit");
+        System.out.print("Enter your choice (1-5): ");
         return scanner.nextLine().trim();
     }
 
     public String getUpdatedValue(String field) {
         System.out.print("Enter new " + field + ": ");
         return scanner.nextLine().trim();
+    }
+
+    public boolean getConfirmation(String message) {
+        while (true) {
+            System.out.print(message);
+            String input = scanner.nextLine().trim().toUpperCase();
+            if (input.equals("Y")) {
+                return true;
+            } else if (input.equals("N")) {
+                return false;
+            } else {
+                messageUI.displayInvalidMessage("Error: Please enter 'Y' for Yes or 'N' for No.");
+            }
+        }
     }
 
     public String getTreatmentId() {
@@ -127,15 +138,17 @@ public class MedicalTreatmentUI {
     // ===== Display Details =====
     public void displayTreatmentDetails(Treatment treatment) {
         if (treatment != null) {
-            System.out.println("\n==============================");
+            System.out.println("\n=====================================================================");
             System.out.println("Treatment Details:");
             System.out.println("ID: " + treatment.getTreatmentId());
             System.out.println("Patient Name: " + treatment.getPatientName());
             System.out.println("Doctor Name: " + treatment.getDoctorName());
             System.out.println("Diagnosis: " + treatment.getDiagnosis());
             System.out.println("Treatment: " + treatment.getTreatmentDetails());
+            System.out.println("Quantity: " + treatment.getQuantity());
+            System.out.println("PaymentStatus: " + treatment.getPaymentStatus());
             System.out.println("Date: " + treatment.getTreatmentDate());
-            System.out.println("==============================");
+            System.out.println("=====================================================================");
         } else {
             messageUI.displayInvalidMessage("Treatment record not found.");
         }
@@ -147,29 +160,31 @@ public class MedicalTreatmentUI {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date date = new Date();
 
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
             System.out.println(title);
             System.out.println("Total Records: " + treatments.sizeOf());
             System.out.println("Generated On: " + sdf.format(date));
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s%n",
-                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Date");
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
+                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
-            System.out.println("---------------------------------------------------------------------");
+            System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
                         t.getTreatmentId(),
                         t.getPatientName(),
                         t.getDoctorName(),
                         t.getDiagnosis(),
                         t.getTreatmentDetails(),
+                        t.getQuantity(),
+                        t.getPaymentStatus() ? "Pay" : "Unpay",
                         sdf.format(t.getTreatmentDate()));
             }
 
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
         } else {
             messageUI.displayInvalidMessage("No treatments available to display.");
         }
@@ -181,28 +196,30 @@ public class MedicalTreatmentUI {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date date = new Date();
 
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
             System.out.println(title);
             System.out.println("Total Records: " + treatments.sizeOf());
             System.out.println("Generated On: " + sdf.format(date));
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s%n",
-                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Date");
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
+                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
-            System.out.println("---------------------------------------------------------------------");
+            System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-5s %-25s %-20s%n",
                         t.getTreatmentId(),
                         t.getPatientName(),
                         t.getDoctorName(),
                         t.getDiagnosis(),
                         t.getTreatmentDetails(),
+                        t.getQuantity(),
+                        t.getPaymentStatus() ? "Pay" : "Unpay",
                         sdf.format(t.getTreatmentDate()));
             }
-            System.out.println("=====================================================================");
+            System.out.println("===============================================================================================================================================================================================");
         } else {
             messageUI.displayInvalidMessage("No treatments available to display.");
         }

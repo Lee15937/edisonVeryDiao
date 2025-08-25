@@ -123,7 +123,7 @@ public class DoctorManagement {
 
             return new Doctor(doctorId, name, gender, phoneNo, email, dutySchedule, availability);
         } catch (Exception e) {
-            System.out.println("âš ï¸� Error parsing doctor record: " + String.join("#", parts));
+            System.out.println("Error parsing doctor record: " + String.join("#", parts));
             return null;
         }
     }

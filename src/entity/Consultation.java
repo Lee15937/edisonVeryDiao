@@ -143,6 +143,6 @@ public class Consultation implements Comparable<Consultation> {
 
     @Override
     public String toString() {
-        return consultationID + "#" + date + "#" + time + "#" + patientName + "#" + doctorName + "#" + status + "#";
+        return consultationID + "#" + patientName + "#" + doctorName + "#" + date + "#" + time + "#" + status + "#";
     }
 }

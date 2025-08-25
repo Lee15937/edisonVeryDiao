@@ -12,13 +12,12 @@ public class Treatment implements Iterable<Treatment>, Serializable {
 
     private String treatmentId;
     private String patientName;
-    private String doctorName; // wait sohai edison done the consultation if he does not done i died :)
+    private String doctorName;
     private String diagnosis;
     private String treatmentDetails;
+    private int quantity;
     private boolean paymentStatus;
     private Date treatmentDate;
-
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy");
 
     public Treatment() {
         this.treatmentDate = new Date();
@@ -28,12 +27,24 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentId = treatmentId;
     }
 
-    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails, boolean paymentStatus) {
+    public Treatment(String treatmentId, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus) {
+        this.treatmentId = treatmentId;
+        this.diagnosis = diagnosis;
+        this.treatmentDetails = treatmentDetails;
+        this.quantity = quantity;
+        this.paymentStatus = paymentStatus;
+        this.treatmentDate = new Date();   // current date
+    }
+    
+    
+
+    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus) {
         this.treatmentId = treatmentId;
         this.patientName = patientName;
         this.doctorName = doctorName;
         this.diagnosis = diagnosis;
         this.treatmentDetails = treatmentDetails;
+        this.quantity = quantity;
         this.paymentStatus = paymentStatus;
         this.treatmentDate = new Date();   // current date
     }
@@ -78,12 +89,20 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentDetails = treatmentDetails;
     }
 
-    public boolean isPaymentStatus() {
+    public boolean getPaymentStatus() {
         return paymentStatus;
     }
 
     public void setPaymentStatus(boolean paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
     
     public Date getTreatmentDate() {
@@ -94,13 +113,12 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentDate = treatmentDate;
     }
 
-    public String getFormattedTreatmentDate() {
-        return DATE_FORMAT.format(treatmentDate);
-    }
-
     @Override
     public String toString() {
-        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + treatmentDate + "#" + (paymentStatus ? "Pay" : "Unpay");
+        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        String formattedDate = (treatmentDate != null) ? sdf.format(treatmentDate) : "N/A";
+        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + quantity + "#" +
+                (paymentStatus ? "Pay" : "Unpay") + "#" + formattedDate;
     }
 
     @Override
@@ -122,6 +140,6 @@ public class Treatment implements Iterable<Treatment>, Serializable {
 
     @Override
     public Iterator<Treatment> iterator() {
-        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+        throw new UnsupportedOperationException("Not supported yet."); 
     }
 }

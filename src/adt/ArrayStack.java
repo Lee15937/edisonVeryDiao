@@ -1,5 +1,9 @@
 package adt;
 
+/**
+ *
+ * @author kosoo
+ */
 import java.util.EmptyStackException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;

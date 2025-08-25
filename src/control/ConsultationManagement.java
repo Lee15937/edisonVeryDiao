@@ -535,6 +535,10 @@ public class ConsultationManagement {
     public SortedLinkedList<Consultation> readConnsultationFromFile() {
         return dao.readTextFileAsSortedLinkedList(CONSUL_FILE, 6, this::parseConsultationFromParts);
     }
+    
+    public ArrayList<Consultation> readConsultationFromFileAsArrayList() {
+        return dao.readTextFileAsArrayList(CONSUL_FILE, 6, this::parseConsultationFromParts);
+    }
 
     private Consultation parseConsultationFromParts(String[] parts) {
         try {

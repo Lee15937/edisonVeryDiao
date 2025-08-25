@@ -387,7 +387,7 @@ public class DoctorManagementUI {
         }
 
         if (selectedDoctor == null) {
-            System.out.println("â�Œ Doctor with ID " + doctorId + " not found.");
+            System.out.println("Doctor with ID " + doctorId + " not found.");
             return;
         }
 
@@ -424,7 +424,7 @@ public class DoctorManagementUI {
             }
         }
         if (targetDoctor == null) {
-            System.out.println("â�Œ Doctor not found.");
+            System.out.println("Doctor not found.");
             return;
         }
 
@@ -512,7 +512,7 @@ public class DoctorManagementUI {
             }
         }
         if (targetDoctor == null) {
-            System.out.println("â�Œ Doctor not found.");
+            System.out.println("Doctor not found.");
             return;
         }
 
@@ -625,7 +625,7 @@ public class DoctorManagementUI {
             if (foundDoctor != null) {
                 return id;
             } else {
-                System.out.println("\nâ�Œ Doctor with ID " + id + " not found.");
+                System.out.println("\n Doctor with ID " + id + " not found.");
                 ChoiceYesOrNo();
             }
         }
@@ -743,23 +743,23 @@ public class DoctorManagementUI {
         }
 
         if (doc == null) {
-            System.out.println("â�Œ Doctor not found.");
+            System.out.println("Doctor not found.");
             return;
         }
 
         System.out.print("Are you sure you want to remove Dr. " + doc.getName() + " (Y/N)? ");
         String confirm = scanner.nextLine().trim();
         if (!confirm.equalsIgnoreCase("Y")) {
-            System.out.println("â�Œ Removal cancelled.");
+            System.out.println("Removal cancelled.");
             return;
         }
 
         Doctor removed = doctorList.remove(indexToRemove);
         if (removed != null) {
             dao.saveToFile(doctorList, DOCTOR_FILE);
-            System.out.println("âœ… Doctor " + doc.getName() + " removed successfully.");
+            System.out.println("… Doctor " + doc.getName() + " removed successfully.");
         } else {
-            System.out.println("â�Œ Failed to remove doctor.");
+            System.out.println("Failed to remove doctor.");
         }
     }
 }

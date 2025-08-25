@@ -21,7 +21,9 @@ public class ClinicManagementDriver {
         int choice;
 
         do {
-            System.out.println("Main Menu:");
+            System.out.println("================================================================");
+            System.out.println("                       Main Menu:");
+            System.out.println("================================================================");
             System.out.println("1. Patient Management Subsystem");
             System.out.println("2. Doctor Management Subsystem");
             System.out.println("3. Consultation Management Subsystem");
@@ -180,7 +182,6 @@ public class ClinicManagementDriver {
                     System.out.println("Invalid choice, please enter a number between 1 and 6.");
                     break;
             }
-
         } while (choice != 6);
 
         scanner.close();

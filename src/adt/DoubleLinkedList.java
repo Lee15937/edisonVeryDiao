@@ -1,5 +1,9 @@
 package adt;
 
+/**
+ *
+ * @author kosoo
+ */
 import java.io.Serializable;
 import java.util.Iterator;
 
