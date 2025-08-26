@@ -280,13 +280,4 @@ public class MedicalTreatmentUI {
         return scanner.nextLine().trim();
     }
 
-    // ===== Messages =====
-    public void displaySuccess(String message) {
-        System.out.println("[SUCCESS] " + message);
-    }
-
-    public void displayError(String message) {
-        System.out.println("[ERROR] " + message);
-    }
-
 }

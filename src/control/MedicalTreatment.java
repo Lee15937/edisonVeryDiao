@@ -56,7 +56,7 @@ public class MedicalTreatment {
                         filterTreatment();
                         break;
                     case 7:
-                        // report
+                        generateSummaryReport();
                         break;
                     case 8:
                         messageUI.displayExitMessage();
@@ -85,7 +85,6 @@ public class MedicalTreatment {
                 return;
             }
 
-            // ✅ Filter consultations that are CHECK_IN only
             ArrayList<Consultation> checkInConsultations = new ArrayList<>();
             for (Consultation c : consultations) {
                 if (c.getStatus() == Status.CHECKED_IN) {   // compare enum directly
@@ -447,9 +446,56 @@ public class MedicalTreatment {
     }
 
     private void filterTreatmentByDoctor() {
+        String doctorName = medicalTreatmentUI.getUserInputWithRegex(
+                "Enter Doctor Name (or 'X' to exit): ",
+                "Error: Invalid input. Please enter a valid Doctor name.",
+                "^[A-Za-z\\s]+|X$" // allow alphabets, spaces, or 'X'
+        );
+
+        if (doctorName.equalsIgnoreCase("X")) {
+            return; // exit filter
+        }
+
+        DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
+
+        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment -> {
+            return treatment.getDoctorName().equalsIgnoreCase(doctorName);
+        });
+
+        if (filteredList.sizeOf() > 0) {
+            medicalTreatmentUI.displayTreatmentReport(filteredList, "Treatment Report for Doctor: " + doctorName);
+            command.pressEnterToContinue();
+        } else {
+            messageUI.displayInvalidMessage("No treatments found for Doctor: " + doctorName);
+            command.pressEnterToContinue();
+        }
     }
 
     private void filterTreatmentByPatient() {
+        // Step 1: Ask user for patient name
+        String patientName = medicalTreatmentUI.getUserInputWithRegex(
+                "Enter Patient Name (or 'X' to exit): ",
+                "Error: Invalid input. Please enter a valid Patient name.",
+                "^[A-Za-z\\s]+|X$" // allow alphabets, spaces, or 'X'
+        );
+
+        if (patientName.equalsIgnoreCase("X")) {
+            return;
+        }
+
+        DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
+
+        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment -> {
+            return treatment.getPatientName().equalsIgnoreCase(patientName);
+        });
+
+        if (filteredList.sizeOf() > 0) {
+            medicalTreatmentUI.displayTreatmentReport(filteredList, "Treatment Report for Patient: " + patientName);
+            command.pressEnterToContinue();
+        } else {
+            messageUI.displayInvalidMessage("No treatments found for Patient: " + patientName);
+            command.pressEnterToContinue();
+        }
     }
 
     private void filterLast10Treatments() {
@@ -471,6 +517,78 @@ public class MedicalTreatment {
 
         latest10Treatments.clear();
         treatmentStack.clear();
+    }
+
+    private void generateSummaryReport() {
+        DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
+
+        if (treatmentList.sizeOf() > 0) {
+
+            medicalTreatmentUI.displayTreatmentReport(treatmentList, "Treatment Summary Report");
+
+            System.out.println("\n=== Summary of Treatments by Medicine ===");
+            ArrayList<String> countedMedicines = new ArrayList<>();
+
+            for (int i = 0; i < treatmentList.sizeOf(); i++) {
+                Treatment t = treatmentList.get(i);
+                String medicine = t.getTreatmentDetails(); // Assuming Treatment has getMedicineName()
+
+                if (!countedMedicines.contains(medicine)) {
+                    int quantity = 0;
+
+                    // Count quantity across all treatments
+                    for (int j = 0; j < treatmentList.sizeOf(); j++) {
+                        Treatment t2 = treatmentList.get(j);
+                        if (t2.getTreatmentDetails().equalsIgnoreCase(medicine)) {
+                            quantity += t2.getQuantity(); // Assuming Treatment has getQuantity()
+                        }
+                    }
+
+                    System.out.println("Medicine: " + medicine + " | Total Quantity: " + quantity);
+                    countedMedicines.add(medicine);
+                }
+            }
+
+            // Count treatments per doctor
+            System.out.println("\nTreatments by Doctor:");
+            for (int i = 0; i < treatmentList.sizeOf(); i++) {
+                Treatment t = treatmentList.get(i);
+                String doctor = t.getDoctorName();
+                int count = 0;
+
+                // Count how many times this doctor appears in the list
+                for (int j = 0; j < treatmentList.sizeOf(); j++) {
+                    if (treatmentList.get(j).getDoctorName().equalsIgnoreCase(doctor)) {
+                        count++;
+                    }
+                }
+
+                System.out.println(doctor + ": " + count);
+            }
+
+            // Count treatments per patient
+            System.out.println("\nTreatments by Patient:");
+            for (int i = 0; i < treatmentList.sizeOf(); i++) {
+                Treatment t = treatmentList.get(i);
+                String patient = t.getPatientName();
+                int count = 0;
+
+                for (int j = 0; j < treatmentList.sizeOf(); j++) {
+                    if (treatmentList.get(j).getPatientName().equalsIgnoreCase(patient)) {
+                        count++;
+                    }
+                }
+
+                System.out.println(patient + ": " + count);
+            }
+
+            System.out.println("\nTotal Treatments Recorded: " + treatmentList.sizeOf());
+            command.pressEnterToContinue();
+
+        } else {
+            messageUI.displayInvalidMessage("No treatments found.");
+            command.pressEnterToContinue();
+        }
     }
 
     private DoubleLinkedList<Treatment> readTreatmentFromFileAsDLL() {
