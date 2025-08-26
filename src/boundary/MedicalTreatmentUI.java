@@ -6,12 +6,15 @@ package boundary;
 
 import adt.ArrayList;
 import adt.DoubleLinkedList;
+import control.StockCTRL;
+import entity.Medicine;
 import entity.Treatment;
 import utility.MessageUI;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
+import utility.Command;
 
 /**
  *
@@ -21,6 +24,7 @@ public class MedicalTreatmentUI {
 
     private Scanner scanner = new Scanner(System.in);
     private MessageUI messageUI = new MessageUI();
+    private Command command = new Command();
 
     public Scanner getScanner() {
         return scanner;
@@ -53,24 +57,56 @@ public class MedicalTreatmentUI {
     }
 
     public Treatment gatherTreatmentDetails() {
+        StockCTRL stockManagement = new StockCTRL();
+        ArrayList<Medicine> medicines = stockManagement.readMedicineFromFileAsArrayList();
+
         String diagnosis = getUserInput("Enter Diagnosis Description (or 'X' to exit): ", "Error: Diagnosis cannot be blank.");
         if (diagnosis == null) {
             return null;
         }
 
-        String treatment = getUserInput("Enter Treatment Details (or 'X' to exit): ", "Error: Treatment details cannot be blank.");
-        if (treatment == null) {
-            return null;
+        System.out.println("\nAvailable Medicines:");
+        for (int i = 0; i < medicines.sizeOf(); i++) {
+            Medicine m = medicines.get(i);
+            System.out.println((i + 1) + ". " + m.getMedicineID() + " | " + m.getName() + " | Stock: " + m.getStock());
+        }
+        System.out.println("X. Exit");
+
+        Medicine selectedMedicine = null;
+        while (true) {
+            String input = getUserInput("Select medicine (1-" + medicines.sizeOf() + " or 'X' to cancel): ",
+                    "Error: Medicine choice cannot be blank.");
+            if (input == null) { // user pressed X
+                return null;
+            }
+
+            try {
+                int choice = Integer.parseInt(input);
+                if (choice >= 1 && choice <= medicines.sizeOf()) {
+                    selectedMedicine = medicines.get(choice - 1);
+                    break;
+                } else {
+                    messageUI.displayInvalidMessage("Invalid choice. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                messageUI.displayInvalidMessage("Invalid input. Enter a number or 'X' to exit.");
+            }
         }
 
-        String qtyStr = getUserInputWithRegex("Enter Quantity (number, or 'X' to exit): ",
-                "Error: Invalid Quantity.", "\\d{1,3}");
+        String qtyStr = getUserInputWithRegex("Enter Quantity (number, or 'X' to exit): ", "Error: Invalid Quantity.", "\\d{1,3}");
         if (qtyStr == null) {
-            return null;
+            return null; // user cancelled
         }
+        
         int qty = Integer.parseInt(qtyStr);
 
-        return new Treatment(null, diagnosis, treatment, qty, false);
+        //check if enough stock is available
+        if (selectedMedicine.getStock() <= qty) {
+            messageUI.displayInvalidMessage("Not enough stock available for " + selectedMedicine.getName());
+            return null;
+        }
+
+        return new Treatment(null, diagnosis, selectedMedicine.getName(), qty, false);
     }
 
     public String getUserInput(String prompt, String errorMessage) {
@@ -146,7 +182,7 @@ public class MedicalTreatmentUI {
             System.out.println("Diagnosis: " + treatment.getDiagnosis());
             System.out.println("Treatment: " + treatment.getTreatmentDetails());
             System.out.println("Quantity: " + treatment.getQuantity());
-            System.out.println("PaymentStatus: " + treatment.getPaymentStatus());
+            System.out.println("PaymentStatus: " + (treatment.getPaymentStatus() ? "Pay" : "Unpay"));
             System.out.println("Date: " + treatment.getTreatmentDate());
             System.out.println("=====================================================================");
         } else {

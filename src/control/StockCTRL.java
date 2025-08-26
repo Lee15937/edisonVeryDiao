@@ -7,13 +7,14 @@ import adt.ListInterface;
 import java.util.function.Function;
 
 public class StockCTRL {
+
     private ListInterface<Medicine> medicines;
     private Dao<Medicine> dao = new Dao<>();
-    private static final String MEDICINE_FILE = "src/DAO/medicine.txt"; 
+    private static final String MEDICINE_FILE = "src/DAO/medicine.txt";
     private int idCounter = 0; // track last used medicine number
 
     public StockCTRL() {
-        this.medicines = new ArrayList<>();  
+        this.medicines = new ArrayList<>();
         loadFromFile();
         updateIdCounter(); // ensure counter starts from last medicine
     }
@@ -40,7 +41,7 @@ public class StockCTRL {
     // ✅ Add medicine manually (with custom ID)
     public boolean addMedicine(Medicine medicine) {
         if (findMedicine(medicine.getMedicineID()) != null) {
-            return false; 
+            return false;
         }
         medicines.add(medicine);
         saveToFile();
@@ -66,7 +67,9 @@ public class StockCTRL {
 
     public void dispenseMedicine(String medicineID, int quantity) {
         Medicine med = findMedicine(medicineID);
-        if (med == null) throw new RuntimeException("Medicine not found!");
+        if (med == null) {
+            throw new RuntimeException("Medicine not found!");
+        }
         med.reduceStock(quantity);
         saveToFile();
     }
@@ -91,8 +94,7 @@ public class StockCTRL {
                 return null;
             }
         };
-
-        ArrayList<Medicine> loadedMedicines = Dao.readTextFileAsArrayList(MEDICINE_FILE, 4, medicineMapper);
+        ArrayList<Medicine> loadedMedicines = dao.readTextFileAsArrayList(MEDICINE_FILE, 4, medicineMapper);
 
         for (int i = 0; i < loadedMedicines.sizeOf(); i++) {
             Medicine med = loadedMedicines.get(i);
@@ -102,6 +104,18 @@ public class StockCTRL {
         }
 
         System.out.println("Loaded " + medicines.getNumberOfEntries() + " medicines.");
+    }
+
+    public ArrayList<Medicine> readMedicineFromFileAsArrayList() {
+        Function<String[], Medicine> medicineMapper = parts -> {
+            try {
+                return Medicine.fromString(String.join("#", parts));
+            } catch (Exception e) {
+                System.out.println("Error parsing medicine record: " + String.join("#", parts));
+                return null;
+            }
+        };
+        return dao.readTextFileAsArrayList(MEDICINE_FILE, 4, medicineMapper);
     }
 
     // ✅ Save medicines to file

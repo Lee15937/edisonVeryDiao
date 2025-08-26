@@ -1,2 +1,2 @@
-T001#edi#Jogn#Influences#Panadol#2#Unpay#周二 8月 26 04:55:19 2025
-T002#choi#Jogn#Flur#Panadol#1#Unpay#周二 8月 26 04:55:19 2025
+T001#choi#Jogn#Flur#Amoxicillin#2#Unpay#Tue Aug 26 16:10:57 2025
+T002#edi#Jogn#Influences#Paracetamol#5#Unpay#Tue Aug 26 16:10:57 2025

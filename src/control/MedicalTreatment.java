@@ -84,21 +84,38 @@ public class MedicalTreatment {
                 return;
             }
 
-            System.out.println("Select Consultation to add Diagnosis:");
-            for (int i = 0; i < consultations.sizeOf(); i++) {
-                Consultation c = consultations.get(i);
-                System.out.println((i + 1) + ". " + c.getConsultationID()
-                        + " | Patient: " + c.getPatientName()
-                        + " | Doctor: " + c.getDoctorName());
-            }
+            Consultation selectedConsultation = null;
 
-            int choice = command.readInt("Enter choice (1-" + consultations.sizeOf() + "): ");
-            if (choice < 1 || choice > consultations.sizeOf()) {
-                messageUI.displayInvalidMessage("Invalid choice.");
-                return;
-            }
+            while (true) {
+                System.out.println("\nSelect Consultation to add Diagnosis:");
+                for (int i = 0; i < consultations.sizeOf(); i++) {
+                    Consultation c = consultations.get(i);
+                    System.out.println((i + 1) + ". " + c.getConsultationID()
+                            + " | Patient: " + c.getPatientName()
+                            + " | Doctor: " + c.getDoctorName());
+                }
 
-            Consultation selectedConsultation = consultations.get(choice - 1);
+                String input = medicalTreatmentUI.getUserInput("Enter choice (1-" + consultations.sizeOf() + " or 'X' to exit): ",
+                        "Error: Choice cannot be blank.");
+
+                if (input == null) { // user pressed X
+                    messageUI.displayValidMessage("Operation canceled by user.");
+                    command.pressEnterToContinue();
+                    return;
+                }
+
+                try {
+                    int choice = Integer.parseInt(input);
+                    if (choice >= 1 && choice <= consultations.sizeOf()) {
+                        selectedConsultation = consultations.get(choice - 1);
+                        break;
+                    } else {
+                        messageUI.displayInvalidMessage("Invalid choice. Please try again.");
+                    }
+                } catch (NumberFormatException e) {
+                    messageUI.displayInvalidMessage("Invalid input. Please enter a number or 'X' to exit.");
+                }
+            }
 
             String id = generateTreatmentId();
             System.out.println("Treatment ID: " + id);
