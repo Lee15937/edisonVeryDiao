@@ -7,6 +7,7 @@ import adt.DoubleLinkedList;
 import boundary.MedicalTreatmentUI;
 import entity.Treatment;
 import entity.Consultation;
+import entity.Consultation.Status;
 import entity.Medicine;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -84,18 +85,32 @@ public class MedicalTreatment {
                 return;
             }
 
+            // ✅ Filter consultations that are CHECK_IN only
+            ArrayList<Consultation> checkInConsultations = new ArrayList<>();
+            for (Consultation c : consultations) {
+                if (c.getStatus() == Status.CHECKED_IN) {   // compare enum directly
+                    checkInConsultations.add(c);
+                }
+            }
+            if (checkInConsultations.isEmpty()) {
+                messageUI.displayInvalidMessage("No consultations with CHECK_IN status found. Diagnosis can only be added for CHECK_IN consultations.");
+                command.pressEnterToContinue();
+                return;
+            }
+
             Consultation selectedConsultation = null;
 
             while (true) {
                 System.out.println("\nSelect Consultation to add Diagnosis:");
-                for (int i = 0; i < consultations.sizeOf(); i++) {
-                    Consultation c = consultations.get(i);
+                for (int i = 0; i < checkInConsultations.sizeOf(); i++) {
+                    Consultation c = checkInConsultations.get(i);
                     System.out.println((i + 1) + ". " + c.getConsultationID()
                             + " | Patient: " + c.getPatientName()
-                            + " | Doctor: " + c.getDoctorName());
+                            + " | Doctor: " + c.getDoctorName()
+                            + " | Status: " + c.getStatus());
                 }
 
-                String input = medicalTreatmentUI.getUserInput("Enter choice (1-" + consultations.sizeOf() + " or 'X' to exit): ",
+                String input = medicalTreatmentUI.getUserInput("Enter choice (1-" + checkInConsultations.sizeOf() + " or 'X' to exit): ",
                         "Error: Choice cannot be blank.");
 
                 if (input == null) { // user pressed X
@@ -106,8 +121,8 @@ public class MedicalTreatment {
 
                 try {
                     int choice = Integer.parseInt(input);
-                    if (choice >= 1 && choice <= consultations.sizeOf()) {
-                        selectedConsultation = consultations.get(choice - 1);
+                    if (choice >= 1 && choice <= checkInConsultations.sizeOf()) {
+                        selectedConsultation = checkInConsultations.get(choice - 1);
                         break;
                     } else {
                         messageUI.displayInvalidMessage("Invalid choice. Please try again.");
@@ -136,6 +151,14 @@ public class MedicalTreatment {
             treatments.add(treatment);
 
             dao.saveToFile(treatments, FILE_NAME);
+
+            // After adding treatment, update consultation status
+            boolean updated = consultationManagement.updateStatusToCompleted(selectedConsultation.getConsultationID());
+            if (updated) {
+                messageUI.displayValidMessage("Consultation " + selectedConsultation.getConsultationID() + " marked as COMPLETED.");
+            } else {
+                messageUI.displayInvalidMessage("Unable to update Consultation status. It may already be COMPLETED.");
+            }
 
             messageUI.displayValidMessage("Treatment added successfully with ID: " + id);
             command.pressEnterToContinue();

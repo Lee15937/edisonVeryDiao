@@ -1,2 +1,1 @@
-T001#choi#Jogn#Flur#Amoxicillin#2#Unpay#Tue Aug 26 16:10:57 2025
-T002#edi#Jogn#Influences#Paracetamol#5#Unpay#Tue Aug 26 16:10:57 2025
+T001#edi#Jogn#Covid-19#Paracetamol#2#Unpay#周三 8月 27 00:49:08 2025

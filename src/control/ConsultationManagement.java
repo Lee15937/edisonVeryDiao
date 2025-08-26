@@ -84,7 +84,6 @@ public class ConsultationManagement {
 //                return; // exit without adding
 //            }
 //        }
-
         boolean added = consultationList.add(newConsultation);
 
         if (added) {
@@ -240,7 +239,18 @@ public class ConsultationManagement {
             System.out.println("No consultations found.");
         } else {
             Utils.printCenteredTitle("ALL CONSULTATIONS", 85);
-            consultationList.display();
+            ui.displayConsultationHeader();
+
+            // Example: ID(10) + Patient(25) + Date(20) + Status(15) ≈ 85 chars
+            for (Consultation c : consultationList) {
+                System.out.printf("%-10s %-12s %-8s %-20s %-20s %-15s%n",
+                        c.getConsultationID(),
+                        c.getDate(),
+                        c.getTime(),
+                        c.getPatientName(),
+                        c.getDoctorName(),
+                        c.getStatus());
+            }
         }
     }
 
@@ -249,14 +259,18 @@ public class ConsultationManagement {
             System.out.println("No consultations found.");
         } else {
             Utils.printCenteredTitle("SCHEDULED CONSULTATIONS", 85);
-
             ui.displayConsultationHeader();
-            for (Consultation c : consultationList) {  // works if consultationList is Iterable
+            for (Consultation c : consultationList) {
                 if (c.getStatus() == Consultation.Status.SCHEDULED) {
-                    System.out.println(c);  // or use your custom display method
+                    System.out.printf("%-10s %-25s %-20s %-15s%n",
+                            c.getConsultationID(),
+                            c.getDate(),
+                            c.getTime(),
+                            c.getPatientName(),
+                            c.getDoctorName(),
+                            c.getStatus());
                 }
             }
-
         }
     }
 
@@ -265,14 +279,18 @@ public class ConsultationManagement {
             System.out.println("No consultations found.");
         } else {
             Utils.printCenteredTitle("CHECK_IN CONSULTATIONS", 85);
-
             ui.displayConsultationHeader();
-            for (Consultation c : consultationList) {  // works if consultationList is Iterable
+            for (Consultation c : consultationList) {
                 if (c.getStatus() == Consultation.Status.CHECKED_IN) {
-                    System.out.println(c);  // or use your custom display method
+                    System.out.printf("%-10s %-25s %-20s %-15s%n",
+                            c.getConsultationID(),
+                            c.getDate(),
+                            c.getTime(),
+                            c.getPatientName(),
+                            c.getDoctorName(),
+                            c.getStatus());
                 }
             }
-
         }
     }
 
@@ -416,8 +434,6 @@ public class ConsultationManagement {
 
         boolean success = updateStatusToCompleted(id);
 
-        dao.updateRecordInFile(CONSUL_FILE, id, 5, "COMPLETED");
-
         if (success) {
             System.out.println("Consultation " + id + " status updated to COMPLETED.");
         } else {
@@ -445,15 +461,19 @@ public class ConsultationManagement {
 
 // Update status to COMPLETED
     public boolean updateStatusToCompleted(String consultationID) {
-        for (Consultation c : consultationList) {   // ✅ use the list's iterator
-            if (c.getConsultationID().equalsIgnoreCase(consultationID)) {
-                if (c.getStatus() == Consultation.Status.CHECKED_IN) {
-                    c.setStatus(Consultation.Status.COMPLETED);
-                    return true;
-                } else {
-                    System.out.println("Consultation is not in CHECKED_IN state.");
-                    return false;
-                }
+    for (Consultation c : consultationList) {
+        if (c.getConsultationID().equalsIgnoreCase(consultationID)) {
+            if (c.getStatus() == Consultation.Status.CHECKED_IN) {
+                c.setStatus(Consultation.Status.COMPLETED);
+
+                //Update the file immediately, no need do the updateRecordInfile at the appoinmentComplete()
+                dao.updateRecordInFile(CONSUL_FILE, consultationID, 5, "COMPLETED");
+
+                return true;
+            } else {
+                System.out.println("Consultation is not in CHECKED_IN state.");
+                return false;
+            }
             }
         }
         return false; // Not found
@@ -535,7 +555,7 @@ public class ConsultationManagement {
     public SortedLinkedList<Consultation> readConnsultationFromFile() {
         return dao.readTextFileAsSortedLinkedList(CONSUL_FILE, 6, this::parseConsultationFromParts);
     }
-    
+
     public ArrayList<Consultation> readConsultationFromFileAsArrayList() {
         return dao.readTextFileAsArrayList(CONSUL_FILE, 6, this::parseConsultationFromParts);
     }

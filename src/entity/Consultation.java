@@ -37,7 +37,7 @@ public class Consultation implements Comparable<Consultation> {
         this.time = time;
         this.status = Status.SCHEDULED;
     }
-    
+
     private String generateConsultationID() {
         return "C" + COUNTER.getAndIncrement();
     }
@@ -132,7 +132,7 @@ public class Consultation implements Comparable<Consultation> {
             return false;
         }
         Consultation other = (Consultation) obj;
-        return consultationID == other.consultationID;
+        return consultationID.equals(other.consultationID);
     }
 
     // Override hashCode
@@ -143,6 +143,6 @@ public class Consultation implements Comparable<Consultation> {
 
     @Override
     public String toString() {
-        return consultationID + "#" + patientName + "#" + doctorName + "#" + date + "#" + time + "#" + status + "#";
+        return consultationID + "#" + patientName + "#" + doctorName + "#" + date + "#" + time + "#" + status;
     }
 }
