@@ -7,6 +7,7 @@ package control;
 import boundary.ConsultationUI;
 import java.util.Scanner;
 import boundary.PatientRegistrationForm;
+import boundary.PharmacyUI;
 import entity.Patient;
 
 /**
@@ -174,6 +175,10 @@ public class ClinicManagementDriver {
                     break;
                 case 5:
                     // Pharmacy
+                    StockCTRL stockCTRL = new StockCTRL();
+                    PrescriptionCTRL prescriptionCTRL = new PrescriptionCTRL(); 
+                    PharmacyUI pharmacyUI = new PharmacyUI(stockCTRL, prescriptionCTRL);
+                    pharmacyUI.displayMenu();
                     break;
                 case 6:
                     System.out.println("Exiting...");
