@@ -1,13 +1,15 @@
 package control;
 
+import DAO.Dao;
 import entity.Medicine;
 import adt.ArrayList;
 import adt.ListInterface;
-import java.io.*;
+import java.util.function.Function;
 
 public class StockCTRL {
     private ListInterface<Medicine> medicines;
-    private static final String FILE_NAME = "src/DAO/medicine.txt"; 
+    private Dao<Medicine> dao = new Dao<>();
+    private static final String MEDICINE_FILE = "src/DAO/medicine.txt"; 
     private int idCounter = 0; // track last used medicine number
 
     public StockCTRL() {
@@ -35,7 +37,7 @@ public class StockCTRL {
         return true;
     }
 
-    // ✅ If you still want manual add (with custom ID)
+    // ✅ Add medicine manually (with custom ID)
     public boolean addMedicine(Medicine medicine) {
         if (findMedicine(medicine.getMedicineID()) != null) {
             return false; 
@@ -79,37 +81,33 @@ public class StockCTRL {
         return null;
     }
 
-    // ✅ Load medicines from file
-    private void loadFromFile() {
-        File file = new File(FILE_NAME);
-        if (!file.exists()) {
-            System.out.println("⚠ medicine.txt not found, starting with empty list.");
-            return;
+    // ✅ Load medicines from file using Dao + fromString()
+    public void loadFromFile() {
+        Function<String[], Medicine> medicineMapper = parts -> {
+            try {
+                return Medicine.fromString(String.join("#", parts));
+            } catch (Exception e) {
+                System.out.println("Error parsing medicine record: " + String.join("#", parts));
+                return null;
+            }
+        };
+
+        ArrayList<Medicine> loadedMedicines = Dao.readTextFileAsArrayList(MEDICINE_FILE, 4, medicineMapper);
+
+        for (int i = 0; i < loadedMedicines.sizeOf(); i++) {
+            Medicine med = loadedMedicines.get(i);
+            if (med != null) {
+                medicines.add(med);
+            }
         }
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                Medicine med = Medicine.fromString(line);
-                if (med != null) {
-                    medicines.add(med);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        System.out.println("Loaded " + medicines.getNumberOfEntries() + " medicines.");
     }
 
     // ✅ Save medicines to file
-    private void saveToFile() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (int i = 1; i <= medicines.getNumberOfEntries(); i++) {
-                bw.write(medicines.getEntry(i).toString());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void saveToFile() {
+        dao.saveToFile(medicines, MEDICINE_FILE);
+        System.out.println("Medicine data saved.");
     }
 
     // ✅ Update idCounter based on last medicine ID in the file

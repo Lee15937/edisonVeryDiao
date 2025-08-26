@@ -8,17 +8,26 @@ public class Medicine {
 
     public Medicine(String id, String name, double price, int stock) {
         this.medicineID = id;
-        this.name = name;
+        setName(name); // Use setter for validation
         this.price = price;
         this.stock = stock;
     }
 
     // Getters & Setters
     public String getMedicineID() { return medicineID; }
+
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+
+    public void setName(String name) {
+        if (!name.matches("[A-Za-z0-9 ]+")) {
+            throw new IllegalArgumentException("Medicine name can only contain letters, numbers, and spaces.");
+        }
+        this.name = name.trim();
+    }
+
     public double getPrice() { return price; }
     public void setPrice(double price) { this.price = price; }
+
     public int getStock() { return stock; }
 
     public void reduceStock(int quantity) {

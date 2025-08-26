@@ -25,9 +25,8 @@ public class PharmacyUI {
             System.out.println("3. Manage Stock");
             System.out.println("4. Back to Main Menu");
             System.out.print("Enter your choice: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
-
+            
+            int choice = getIntInput();
             switch (choice) {
                 case 1:
                     dispenseMedicine();
@@ -48,7 +47,7 @@ public class PharmacyUI {
 
     private void dispenseMedicine() {
         System.out.print("Enter Prescription ID: ");
-        String presID = scanner.nextLine();
+        String presID = getStringInput();
 
         Prescription p = presCTRL.findPrescription(presID);
         if (p == null) {
@@ -107,9 +106,7 @@ public class PharmacyUI {
             System.out.println("6. Back to Pharmacy Menu");
             System.out.print("Enter your choice: ");
             
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // consume newline
-            
+            int choice = getIntInput();
             switch (choice) {
                 case 1:
                     displayAllMedicines();
@@ -151,10 +148,22 @@ public class PharmacyUI {
 
     private void addMedicine() {
         System.out.println("\n=== ADD NEW MEDICINE ===");
-        System.out.print("Enter Medicine Name: ");
-        String name = scanner.nextLine();
+
+        String name;
+        while (true) {
+            System.out.print("Enter Medicine Name (letters only): ");
+            name = scanner.nextLine().trim();
+
+            if (!name.matches("^[A-Za-z ]+$")) {
+                System.out.println("Invalid name! Only letters and spaces are allowed.");
+                continue;
+            }
+            break;
+        }
+
         System.out.print("Enter Price: RM");
         double price = scanner.nextDouble();
+
         System.out.print("Enter Initial Stock: ");
         int stock = scanner.nextInt();
         scanner.nextLine(); 
@@ -170,33 +179,41 @@ public class PharmacyUI {
         System.out.println("\n=== UPDATE MEDICINE ===");
         System.out.print("Enter Medicine ID to update: ");
         String id = scanner.nextLine();
-        
+
         Medicine existing = stockCTRL.findMedicine(id);
         if (existing == null) {
             System.out.println("Medicine not found!");
             return;
         }
-        
+
         System.out.print("Enter new Name (leave blank to keep current): ");
-        String name = scanner.nextLine();
+        String name = scanner.nextLine().trim();
+
+        if (!name.isEmpty()) {
+            if (!name.matches("^[A-Za-z ]+$")) {
+                System.out.println("Invalid name! Only letters and spaces are allowed. Keeping old name.");
+            } else {
+                existing.setName(name);
+            }
+        }
+
         System.out.print("Enter new Price (enter 0 to keep current): RM");
         double price = scanner.nextDouble();
         scanner.nextLine();
-        
-        if (!name.isEmpty()) {
-            existing.setName(name);
-        }
+
         if (price > 0) {
             existing.setPrice(price);
         }
-        
-        System.out.println("Medicine updated successfully!");
+
+        System.out.println("✅ Medicine updated successfully!");
+        stockCTRL.saveToFile();
     }
+
 
     private void deleteMedicine() {
         System.out.println("\n=== DELETE MEDICINE ===");
         System.out.print("Enter Medicine ID to delete: ");
-        String id = scanner.nextLine();
+        String id = getStringInput();
         
         if (stockCTRL.deleteMedicine(id)) {
             System.out.println("Medicine deleted successfully!");
@@ -208,7 +225,7 @@ public class PharmacyUI {
     private void restockMedicine() {
         System.out.println("\n=== RESTOCK MEDICINE ===");
         System.out.print("Enter Medicine ID: ");
-        String id = scanner.nextLine();
+        String id = getStringInput();
         
         Medicine medicine = stockCTRL.findMedicine(id);
         if (medicine == null) {
@@ -217,10 +234,56 @@ public class PharmacyUI {
         }
         
         System.out.print("Enter quantity to add: ");
-        int quantity = scanner.nextInt();
-        scanner.nextLine();
+        int quantity = getIntInput();
         
         medicine.addStock(quantity);
         System.out.println("Stock updated successfully! New stock: " + medicine.getStock());
+    }
+
+    // =========================
+    // Validation Helper Methods
+    // =========================
+    private int getIntInput() {
+        while (true) {
+            try {
+                int value = Integer.parseInt(scanner.nextLine().trim());
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.print("Invalid input. \nPlease enter a number: ");
+            }
+        }
+    }
+
+    private double getDoubleInput() {
+        while (true) {
+            try {
+                double value = Double.parseDouble(scanner.nextLine().trim());
+                return value;
+            } catch (NumberFormatException e) {
+                System.out.print("Invalid input. \nPlease enter a valid decimal number: ");
+            }
+        }
+    }
+
+    private String getStringInput() {
+        String input;
+        while (true) {
+            input = scanner.nextLine().trim();
+            if (!input.isEmpty()) {
+                return input;
+            }
+            System.out.print("Input cannot be empty. Please enter again: ");
+        }
+    }
+
+    private String getValidatedStringInput(String errorMessage) {
+        String input;
+        while (true) {
+            input = scanner.nextLine().trim();
+            if (!input.isEmpty() && !input.matches("\\d+")) {
+                return input;
+            }
+            System.out.print("" + errorMessage + " \nEnter again: ");
+        }
     }
 }
