@@ -532,7 +532,7 @@ public class MedicalTreatment {
 
             for (int i = 0; i < treatmentList.sizeOf(); i++) {
                 Treatment t = treatmentList.get(i);
-                String medicine = t.getTreatmentDetails(); // Assuming Treatment has getMedicineName()
+                String medicine = t.getTreatmentDetails();
 
                 if (!countedMedicines.contains(medicine)) {
                     int quantity = 0;
@@ -541,7 +541,7 @@ public class MedicalTreatment {
                     for (int j = 0; j < treatmentList.sizeOf(); j++) {
                         Treatment t2 = treatmentList.get(j);
                         if (t2.getTreatmentDetails().equalsIgnoreCase(medicine)) {
-                            quantity += t2.getQuantity(); // Assuming Treatment has getQuantity()
+                            quantity += t2.getQuantity(); 
                         }
                     }
 
