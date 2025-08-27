@@ -6,7 +6,7 @@ package boundary;
 
 import adt.ArrayList;
 import adt.DoubleLinkedList;
-import control.StockCTRL;
+import control.PharmacyManagementCTRL;
 import entity.Medicine;
 import entity.Treatment;
 import utility.MessageUI;
@@ -57,8 +57,8 @@ public class MedicalTreatmentUI {
     }
 
     public Treatment gatherTreatmentDetails() {
-        StockCTRL stockManagement = new StockCTRL();
-        ArrayList<Medicine> medicines = stockManagement.readMedicineFromFileAsArrayList();
+        PharmacyManagementCTRL pharmacyManagement = new PharmacyManagementCTRL();
+        ArrayList<Medicine> medicines = pharmacyManagement.readMedicineFromFileAsArrayList();
 
         String diagnosis = getUserInput("Enter Diagnosis Description (or 'X' to exit): ", "Error: Diagnosis cannot be blank.");
         if (diagnosis == null) {

@@ -175,9 +175,8 @@ public class ClinicManagementDriver {
                     break;
                 case 5:
                     // Pharmacy
-                    StockCTRL stockCTRL = new StockCTRL();
-                    PrescriptionCTRL prescriptionCTRL = new PrescriptionCTRL(); 
-                    PharmacyUI pharmacyUI = new PharmacyUI(stockCTRL, prescriptionCTRL);
+                    PharmacyManagementCTRL pharmacyCTRL = new PharmacyManagementCTRL();
+                    PharmacyUI pharmacyUI = new PharmacyUI(pharmacyCTRL);
                     pharmacyUI.displayMenu();
                     break;
                 case 6:

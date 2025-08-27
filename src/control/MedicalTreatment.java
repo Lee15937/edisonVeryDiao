@@ -8,12 +8,13 @@ import boundary.MedicalTreatmentUI;
 import entity.Treatment;
 import entity.Consultation;
 import entity.Consultation.Status;
-import entity.Medicine;
+import utility.Command;
+import utility.MessageUI;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.InputMismatchException;
-import utility.Command;
-import utility.MessageUI;
+
 
 /**
  *

@@ -1,43 +1,44 @@
 package boundary;
 
-import control.StockCTRL;
-import control.PrescriptionCTRL;
-import entity.Prescription;
+import control.PharmacyManagementCTRL;
 import entity.Medicine;
+import entity.Treatment;
 import java.util.Scanner;
 
 public class PharmacyUI {
-    private StockCTRL stockCTRL;
-    private PrescriptionCTRL presCTRL;
+    private PharmacyManagementCTRL pharmacyCTRL;
     private Scanner scanner;
 
-    public PharmacyUI(StockCTRL stockCTRL, PrescriptionCTRL presCTRL) {
-        this.stockCTRL = stockCTRL;
-        this.presCTRL = presCTRL;
+    public PharmacyUI(PharmacyManagementCTRL pharmacyCTRL) {
+        this.pharmacyCTRL = pharmacyCTRL;
         this.scanner = new Scanner(System.in);
     }
 
     public void displayMenu() {
         while (true) {
             System.out.println("\n=== PHARMACY MANAGEMENT ===");
-            System.out.println("1. Dispense Medicine by Prescription");
-            System.out.println("2. Prescription Report");
-            System.out.println("3. Manage Stock");
-            System.out.println("4. Back to Main Menu");
+            System.out.println("1. Dispense Medicine by Treatment");
+            System.out.println("2. Manage Stock");
+            System.out.println("3. Sales Report");
+            System.out.println("4. Payment Report");
+            System.out.println("5. Back to Main Menu");
             System.out.print("Enter your choice: ");
-            
+
             int choice = getIntInput();
             switch (choice) {
                 case 1:
                     dispenseMedicine();
                     break;
                 case 2:
-                    presCTRL.reportPrescriptions();
-                    break;
-                case 3:
                     stockMenu();
                     break;
+                case 3:
+                    showSalesReport();
+                    break;
                 case 4:
+                    pharmacyCTRL.countPayments();
+                    break;
+                case 5:
                     return;
                 default:
                     System.out.println("Invalid choice.");
@@ -46,50 +47,68 @@ public class PharmacyUI {
     }
 
     private void dispenseMedicine() {
-        System.out.print("Enter Prescription ID: ");
-        String presID = getStringInput();
+        System.out.print("Enter Treatment ID: ");
+        String treatID = getStringInput();
 
-        Prescription p = presCTRL.findPrescription(presID);
-        if (p == null) {
-            System.out.println("Prescription not found!");
+        Treatment t = pharmacyCTRL.findTreatment(treatID);
+        if (t == null) {
+            System.out.println("Treatment not found!");
             return;
         }
 
-        Medicine med = stockCTRL.findMedicine(p.getMedicineID());
+        // ✅ Validation: Check if already paid
+        if (t.getPaymentStatus()) {
+            System.out.println("Treatment is complete. No further dispensing required.");
+            return;
+        }
+
+        String medName = t.getTreatmentDetails();
+        Medicine med = pharmacyCTRL.findMedicineByName(medName);
+
         if (med == null) {
-            System.out.println("Medicine " + p.getMedicineID() + " not found in stock.");
+            System.out.println("Medicine '" + medName + "' not found in stock.");
             return;
         }
 
-        if (!stockCTRL.isMedicineAvailable(p.getMedicineID(), p.getQuantity())) {
+        if (!pharmacyCTRL.isMedicineAvailable(medName, t.getQuantity())) {
             System.out.println("Not enough stock for " + med.getName() + ". Available: " + med.getStock());
             return;
         }
 
         // Deduct stock
-        stockCTRL.dispenseMedicine(p.getMedicineID(), p.getQuantity());
-        double totalPrice = med.getPrice() * p.getQuantity();
+        pharmacyCTRL.dispenseMedicine(medName, t.getQuantity());
+        double totalPrice = med.getPrice() * t.getQuantity();
 
-        // Print details
-        System.out.println("Dispensed " + p.getQuantity() + " of " + med.getName());
-        System.out.println("Doctor: " + p.getDoctorName());
-        System.out.println("Patient: " + p.getPatientName());
-        System.out.println("Diagnostics: " + p.getDiagnostics());
-        System.out.println("Total Price: RM" + totalPrice);
+        System.out.println("\n=== DISPENSE SUMMARY ===");
+        System.out.println("Treatment ID: " + t.getTreatmentId());
+        System.out.println("Doctor: " + t.getDoctorName());
+        System.out.println("Patient: " + t.getPatientName());
+        System.out.println("Diagnosis: " + t.getDiagnosis());
+        System.out.println("Medicine: " + med.getName());
+        System.out.println("Quantity: " + t.getQuantity());
+        System.out.println("Total Price: RM" + String.format("%.2f", totalPrice));
 
-        // Ask for payment
         System.out.print("Make payment now? (Y/N): ");
         String payChoice = scanner.nextLine().trim().toUpperCase();
 
         if (payChoice.equals("Y")) {
-            p.setPaymentStatus("Paid");
-            System.out.println("Payment successful. Prescription marked as PAID.");
+            t.setPaymentStatus(true);
+            System.out.println("Payment successful. Treatment marked as PAID.");
         } else {
-            System.out.println("Prescription remains UNPAID.");
+            System.out.println("Treatment remains UNPAID.");
         }
 
-        // Save updated prescriptions
-        presCTRL.saveToFile();
+        pharmacyCTRL.saveTreatmentsToFile();
+    }
+
+
+    // =========================
+    // NEW FUNCTION: Sales Report
+    // =========================
+    private void showSalesReport() {
+        double totalSales = pharmacyCTRL.calculateTotalSales();
+        System.out.println("\n=== SALES REPORT ===");
+        System.out.println("Total Sales (Paid Treatments): RM" + String.format("%.2f", totalSales));
     }
 
     // =========================
@@ -105,7 +124,7 @@ public class PharmacyUI {
             System.out.println("5. Restock Medicine");
             System.out.println("6. Back to Pharmacy Menu");
             System.out.print("Enter your choice: ");
-            
+
             int choice = getIntInput();
             switch (choice) {
                 case 1:
@@ -136,13 +155,13 @@ public class PharmacyUI {
         System.out.printf("%-8s %-20s %-10s %-10s%n", "ID", "Name", "Price", "Stock");
         System.out.println("-------------------------------------------------------");
 
-        for (int i = 1; i <= stockCTRL.getAllMedicines().getNumberOfEntries(); i++) {
-            Medicine med = stockCTRL.getAllMedicines().getEntry(i);
-            System.out.printf("%-8s %-20s RM%-9.2f %-10d%n", 
-                med.getMedicineID(), 
-                med.getName(), 
-                med.getPrice(), 
-                med.getStock());
+        for (int i = 1; i <= pharmacyCTRL.getAllMedicines().getNumberOfEntries(); i++) {
+            Medicine med = pharmacyCTRL.getAllMedicines().getEntry(i);
+            System.out.printf("%-8s %-20s RM%-9.2f %-10d%n",
+                    med.getMedicineID(),
+                    med.getName(),
+                    med.getPrice(),
+                    med.getStock());
         }
     }
 
@@ -162,13 +181,12 @@ public class PharmacyUI {
         }
 
         System.out.print("Enter Price: RM");
-        double price = scanner.nextDouble();
+        double price = getDoubleInput();
 
         System.out.print("Enter Initial Stock: ");
-        int stock = scanner.nextInt();
-        scanner.nextLine(); 
+        int stock = getIntInput();
 
-        if (stockCTRL.addMedicineAuto(name, price, stock)) {
+        if (pharmacyCTRL.addMedicineAuto(name, price, stock)) {
             System.out.println("Medicine added successfully!");
         } else {
             System.out.println("Failed to add medicine.");
@@ -180,7 +198,7 @@ public class PharmacyUI {
         System.out.print("Enter Medicine ID to update: ");
         String id = scanner.nextLine();
 
-        Medicine existing = stockCTRL.findMedicine(id);
+        Medicine existing = pharmacyCTRL.findMedicine(id);
         if (existing == null) {
             System.out.println("Medicine not found!");
             return;
@@ -198,24 +216,22 @@ public class PharmacyUI {
         }
 
         System.out.print("Enter new Price (enter 0 to keep current): RM");
-        double price = scanner.nextDouble();
-        scanner.nextLine();
+        double price = getDoubleInput();
 
         if (price > 0) {
             existing.setPrice(price);
         }
 
         System.out.println("✅ Medicine updated successfully!");
-        stockCTRL.saveToFile();
+        pharmacyCTRL.saveMedicinesToFile();
     }
-
 
     private void deleteMedicine() {
         System.out.println("\n=== DELETE MEDICINE ===");
         System.out.print("Enter Medicine ID to delete: ");
         String id = getStringInput();
-        
-        if (stockCTRL.deleteMedicine(id)) {
+
+        if (pharmacyCTRL.deleteMedicine(id)) {
             System.out.println("Medicine deleted successfully!");
         } else {
             System.out.println("Medicine not found or deletion failed!");
@@ -226,18 +242,19 @@ public class PharmacyUI {
         System.out.println("\n=== RESTOCK MEDICINE ===");
         System.out.print("Enter Medicine ID: ");
         String id = getStringInput();
-        
-        Medicine medicine = stockCTRL.findMedicine(id);
+
+        Medicine medicine = pharmacyCTRL.findMedicine(id);
         if (medicine == null) {
             System.out.println("Medicine not found!");
             return;
         }
-        
+
         System.out.print("Enter quantity to add: ");
         int quantity = getIntInput();
-        
+
         medicine.addStock(quantity);
         System.out.println("Stock updated successfully! New stock: " + medicine.getStock());
+        pharmacyCTRL.saveMedicinesToFile();
     }
 
     // =========================
@@ -246,8 +263,7 @@ public class PharmacyUI {
     private int getIntInput() {
         while (true) {
             try {
-                int value = Integer.parseInt(scanner.nextLine().trim());
-                return value;
+                return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.print("Invalid input. \nPlease enter a number: ");
             }
@@ -257,8 +273,7 @@ public class PharmacyUI {
     private double getDoubleInput() {
         while (true) {
             try {
-                double value = Double.parseDouble(scanner.nextLine().trim());
-                return value;
+                return Double.parseDouble(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
                 System.out.print("Invalid input. \nPlease enter a valid decimal number: ");
             }
@@ -273,17 +288,6 @@ public class PharmacyUI {
                 return input;
             }
             System.out.print("Input cannot be empty. Please enter again: ");
-        }
-    }
-
-    private String getValidatedStringInput(String errorMessage) {
-        String input;
-        while (true) {
-            input = scanner.nextLine().trim();
-            if (!input.isEmpty() && !input.matches("\\d+")) {
-                return input;
-            }
-            System.out.print("" + errorMessage + " \nEnter again: ");
         }
     }
 }
