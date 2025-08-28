@@ -24,7 +24,7 @@ public class Utils {
             System.out.print("Enter date (YYYY-MM-DD): ");
             date = scanner.nextLine();
             if (!isValidDate(date)) {
-                System.out.println("❌ Invalid date! Please enter today or a future date in format YYYY-MM-DD.");
+                System.out.println("Invalid date! Please enter today or a future date in format YYYY-MM-DD.");
             }
         } while (!isValidDate(date));
         return date;
@@ -52,7 +52,7 @@ public class Utils {
                 // Try to parse user input into a LocalDate
                 LocalDate parsedDate = LocalDate.parse(date, formatter);
 
-                // ✅ Optional: disallow past dates
+                // âœ… Optional: disallow past dates
                 if (parsedDate.isBefore(LocalDate.now())) {
                     System.out.println("Date cannot be in the past. Try again.");
                     continue;
@@ -60,7 +60,7 @@ public class Utils {
 
                 return date; // valid date format
             } catch (DateTimeParseException e) {
-                System.out.println("❌ Invalid date format. Please use YYYY-MM-DD.");
+                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
             }
         }
     }
@@ -72,7 +72,7 @@ public class Utils {
             System.out.print("Enter time (HH:MM): ");
             time = scanner.nextLine();
             if (!isValidTime(time)) {
-                System.out.println("❌ Invalid time! Please enter in HH:MM format (24-hour).");
+                System.out.println("Invalid time! Please enter in HH:MM format (24-hour).");
             }
         } while (!isValidTime(time));
         return time;
@@ -85,5 +85,9 @@ public class Utils {
         } catch (DateTimeParseException e) {
             return false;
         }
+    }
+
+    public static void printDivider(int width) {
+        System.out.println("-".repeat(width));
     }
 }

@@ -71,7 +71,7 @@ public class ClinicManagementDriver {
                                 cm.listConsultations();
                                 break;
                             case 7:
-                                cm.generateReport();
+                                cm.generateConsultationReport();
                                 break;
                             case 8:
                                 System.out.println("Exiting... Goodbye!");

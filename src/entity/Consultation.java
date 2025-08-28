@@ -9,7 +9,9 @@ public class Consultation implements Comparable<Consultation> {
     // Auto-increment ID starting from 1000
 
     private final String consultationID;
+    private String patientIC;
     private String patientName;
+    private String doctorID;
     private String doctorName;
     private String date; // Format: YYYY-MM-DD
     private String time; // Format: HH:MM (24-hour)
@@ -17,21 +19,25 @@ public class Consultation implements Comparable<Consultation> {
 
     // Enum for consultation status
     public enum Status {
-        SCHEDULED, CHECKED_IN, COMPLETED
+        SCHEDULED, CHECKED_IN, COMPLETED, CANCELLED
     }
 
-    public Consultation(String consultationID, String patientName, String doctorName, String date, String time, Status status) {
+    public Consultation(String consultationID, String patientIC, String patientName, String doctorID, String doctorName, String date, String time, Status status) {
         this.consultationID = consultationID; // uses ID from file
+        this.patientIC = patientIC;
         this.patientName = patientName;
+        this.doctorID = doctorID;
         this.doctorName = doctorName;
         this.date = date;
         this.time = time;
         this.status = status;
     }
 
-    public Consultation(String patientName, String doctorName, String date, String time) {
+    public Consultation(String patientIC, String patientName, String doctorID, String doctorName, String date, String time) {
         this.consultationID = generateConsultationID(); // assign unique ID
+        this.patientIC = patientIC;
         this.patientName = patientName;
+        this.doctorID = doctorID;
         this.doctorName = doctorName;
         this.date = date;
         this.time = time;
@@ -41,7 +47,11 @@ public class Consultation implements Comparable<Consultation> {
     private String generateConsultationID() {
         return "C" + COUNTER.getAndIncrement();
     }
-
+    
+    public static void syncCounter(int lastId) {
+        COUNTER.set(lastId + 1);
+    }
+    
     // Getters
     public String getConsultationID() {
         return consultationID;
@@ -67,6 +77,14 @@ public class Consultation implements Comparable<Consultation> {
         return status;
     }
 
+    public String getPatientIC() {
+        return patientIC;
+    }
+
+    public String getDoctorID() {
+        return doctorID;
+    }
+
     // Update status
     public void setStatus(Status status) {
         this.status = status;
@@ -88,6 +106,14 @@ public class Consultation implements Comparable<Consultation> {
         this.time = time;
     }
 
+    public void setPatientIC(String patientIC) {
+        this.patientIC = patientIC;
+    }
+
+    public void setDoctorID(String doctorID) {
+        this.doctorID = doctorID;
+    }
+
     // Compare two consultations by date, then time
     @Override
     public int compareTo(Consultation other) {
@@ -95,14 +121,13 @@ public class Consultation implements Comparable<Consultation> {
         if (dateCompare != 0) {
             return dateCompare; // earlier date first
         }
-        return this.time.compareTo(other.time); // same date → compare time
+        return this.time.compareTo(other.time); // same date â†’ compare time
     }
 
     // Check if two consultations conflict (same doctor, same date, within 15 mins)
     public boolean conflictsWith(Consultation other) {
         // Only matters if same doctor & same date
-        if (!this.doctorName.equalsIgnoreCase(other.doctorName)
-                || !this.date.equals(other.date)) {
+        if (!this.doctorID.equals(other.doctorID) || !this.date.equals(other.date)) {
             return false;
         }
 
@@ -143,6 +168,18 @@ public class Consultation implements Comparable<Consultation> {
 
     @Override
     public String toString() {
-        return consultationID + "#" + patientName + "#" + doctorName + "#" + date + "#" + time + "#" + status;
+        return String.format("%-10s %-15s %-20s %-10s %-20s %-12s %-8s %-12s",
+                consultationID,
+                patientIC,
+                patientName,
+                doctorID,
+                doctorName,
+                date,
+                time,
+                status);
+    }
+
+    public String saveToFile() {
+        return consultationID + "#" + patientIC + "#" + patientName + "#" + doctorID + "#" + doctorName + "#" + date + "#" + time + "#" + status;
     }
 }

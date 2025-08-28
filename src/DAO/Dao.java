@@ -1,6 +1,7 @@
 package DAO;
 
 import adt.*;
+import entity.Consultation;
 import java.io.*;
 import java.util.function.Function;
 
@@ -30,7 +31,7 @@ public class Dao<T> {
                     writer.write(item.toString());
                     writer.newLine();
                 } else {
-                    System.out.println("⚠️ Warning: Item at index " + i + " is null.");
+                    System.out.println("âš ï¸� Warning: Item at index " + i + " is null.");
                 }
             }
         } catch (IOException e) {
@@ -40,9 +41,13 @@ public class Dao<T> {
 
     public <T extends Comparable<T>> void saveToFile(SortedLinkedList<T> list, String FILE_NAME) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (T item : list) { // since your SortedLinkedList implements Iterable
+            for (T item : list) {
                 if (item != null) {
-                    writer.write(item.toString());
+                    if (item instanceof Consultation) {
+                        writer.write(((Consultation) item).saveToFile());
+                    } else {
+                        writer.write(item.toString()); // fallback
+                    }
                     writer.newLine();
                 } else {
                     System.out.println("Warning: Encountered null item while saving.");
@@ -147,7 +152,7 @@ public class Dao<T> {
 
         return list;
     }
-    
+
     public boolean updateRecordInFile(String fileName, String recordId, int fieldIndexToUpdate, String newValue) {
         ArrayList<String> lines = new ArrayList<>();
         boolean updated = false;
