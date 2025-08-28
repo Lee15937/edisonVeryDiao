@@ -105,6 +105,7 @@ public class MedicalTreatment {
                 for (int i = 0; i < checkInConsultations.sizeOf(); i++) {
                     Consultation c = checkInConsultations.get(i);
                     System.out.println((i + 1) + ". " + c.getConsultationID()
+                            + " | Patient IC: " + c.getPatientIC()
                             + " | Patient: " + c.getPatientName()
                             + " | Doctor: " + c.getDoctorName()
                             + " | Status: " + c.getStatus());
@@ -143,6 +144,7 @@ public class MedicalTreatment {
                 return;
             }
 
+            treatment.setPatientIC(selectedConsultation.getPatientIC());
             treatment.setPatientName(selectedConsultation.getPatientName());
             treatment.setDoctorName(selectedConsultation.getDoctorName());
             treatment.setTreatmentId(id);
@@ -237,25 +239,70 @@ public class MedicalTreatment {
                 String choice = medicalTreatmentUI.getUpdateChoice();
                 switch (choice) {
                     case "1":
-                        String newDiagnosis = medicalTreatmentUI.getUpdatedValue("Diagnosis Description");
+                        String newDiagnosis = medicalTreatmentUI.getUserInput(
+                                "Enter Diagnosis Description (or 'X' to exit): ",
+                                "Error: Diagnosis Description cannot be blank."
+                        );
+
+                        if (newDiagnosis == null || newDiagnosis.equalsIgnoreCase("X")) {
+                            messageUI.displayInvalidMessage("Operation canceled by user.");
+                            command.pressEnterToContinue();
+                            return; // keep old value
+                        }
+
                         treatmentToUpdate.setDiagnosis(newDiagnosis);
                         break;
+
                     case "2":
-                        String newTreatment = medicalTreatmentUI.getUpdatedValue("Treatment Details");
+                        String newTreatment = medicalTreatmentUI.getUserInput(
+                                "Enter Treatment Details (or 'X' to exit): ",
+                                "Error: Treatment Details cannot be blank."
+                        );
+
+                        if (newTreatment == null || newTreatment.equalsIgnoreCase("X")) {
+                            messageUI.displayInvalidMessage("Operation canceled by user.");
+                            command.pressEnterToContinue();
+                            return;
+                        }
+
                         treatmentToUpdate.setTreatmentPlan(newTreatment);
                         break;
+
                     case "3":
-                        String newQuantity = medicalTreatmentUI.getUserInputWithRegex("Enter Quantity (or 'X' to exit): ",
-                                "Error: Please enter a valid quantity (numeric).", "\\d+");
+                        String newQuantity = medicalTreatmentUI.getUserInputWithRegex(
+                                "Enter Quantity (or 'X' to exit): ",
+                                "Error: Please enter a valid quantity (numeric).",
+                                "\\d+"
+                        );
+
+                        if (newQuantity == null || newQuantity.equalsIgnoreCase("X")) {
+                            messageUI.displayInvalidMessage("Operation canceled by user.");
+                            command.pressEnterToContinue();
+                            return;
+                        }
+
                         treatmentToUpdate.setQuantity(Integer.parseInt(newQuantity));
                         break;
+
                     case "4":
-                        String newDateStr = medicalTreatmentUI.getUpdatedValue("Follow-Up Date (yyyy-MM-dd)");
+                        String newDateStr = medicalTreatmentUI.getUpdatedValue(
+                                "Follow-Up Date (yyyy-MM-dd HH:mm) or 'X' to exit: "
+                        );
+
+                        if (newDateStr == null || newDateStr.equalsIgnoreCase("X")) {
+                            messageUI.displayInvalidMessage("Operation canceled by user.");
+                            command.pressEnterToContinue();
+                            return;
+                        }
+
                         try {
-                            Date newDate = new SimpleDateFormat("yyyy-MM-dd").parse(newDateStr);
+                            Date newDate = new SimpleDateFormat("yyyy-MM-dd HH:mm").parse(newDateStr);
                             treatmentToUpdate.setTreatmentDate(newDate);
                         } catch (Exception e) {
-                            messageUI.displayInvalidMessage("Invalid date format. Please use yyyy-MM-dd.");
+                            messageUI.displayInvalidMessage(
+                                    "Invalid date/time format. Please use yyyy-MM-dd HH:mm (e.g., 2025-08-29 14:30)."
+                            );
+                            command.pressEnterToContinue();
                             return;
                         }
                         break;
@@ -269,7 +316,6 @@ public class MedicalTreatment {
                         return;
                 }
 
-                // Step 4: Save changes back
                 dao.saveToFile(treatments, FILE_NAME);
                 messageUI.displayValidMessage("Treatment details updated successfully.");
                 medicalTreatmentUI.displayTreatmentDetails(treatmentToUpdate);
@@ -283,7 +329,7 @@ public class MedicalTreatment {
 
         command.pressEnterToContinue();
     }
-    
+
     // arrayList for seach
     public void searchTreatments() {
         String treatmentId = medicalTreatmentUI.getTreatmentId();
@@ -407,7 +453,7 @@ public class MedicalTreatment {
             command.pressEnterToContinue();
         }
     }
-    
+
     // arrayStack for descending the record
     public void listTreatmentByDescending() { // id by decending
         ArrayStack<Treatment> treatments = readTreatmentFromFileAsArrayStack();// for decending also array stack no list
@@ -449,58 +495,153 @@ public class MedicalTreatment {
     }
 
     private void filterTreatmentByDoctor() {
-        String doctorName = medicalTreatmentUI.getUserInputWithRegex(
-                "Enter Doctor Name (or 'X' to exit): ",
-                "Error: Invalid input. Please enter a valid Doctor name.",
-                "^[A-Za-z\\s]+|X$" // allow alphabets, spaces, or 'X'
-        );
-
-        if (doctorName.equalsIgnoreCase("X")) {
-            return; // exit filter
-        }
-
         DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
 
-        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment -> {
-            return treatment.getDoctorName().equalsIgnoreCase(doctorName);
-        });
-
-        if (filteredList.sizeOf() > 0) {
-            medicalTreatmentUI.displayTreatmentReport(filteredList, "Treatment Report for Doctor: " + doctorName);
+        if (treatmentList.sizeOf() == 0) {
+            messageUI.displayInvalidMessage("No treatments found.");
             command.pressEnterToContinue();
-        } else {
-            messageUI.displayInvalidMessage("No treatments found for Doctor: " + doctorName);
-            command.pressEnterToContinue();
-        }
-    }
-
-    private void filterTreatmentByPatient() {
-        // Step 1: Ask user for patient name
-        String patientName = medicalTreatmentUI.getUserInputWithRegex(
-                "Enter Patient Name (or 'X' to exit): ",
-                "Error: Invalid input. Please enter a valid Patient name.",
-                "^[A-Za-z\\s]+|X$" // allow alphabets, spaces, or 'X'
-        );
-
-        if (patientName.equalsIgnoreCase("X")) {
             return;
         }
 
-        DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
+        //Collect unique doctor names
+        ArrayList<String> doctorNames = new ArrayList<>();
+        for (int i = 0; i < treatmentList.sizeOf(); i++) {
+            Treatment t = treatmentList.get(i);
+            if (!doctorNames.contains(t.getDoctorName())) {
+                doctorNames.add(t.getDoctorName());
+            }
+        }
 
-        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment -> {
-            return treatment.getPatientName().equalsIgnoreCase(patientName);
-        });
+        if (doctorNames.isEmpty()) {
+            messageUI.displayInvalidMessage("No doctor names found in treatments.");
+            command.pressEnterToContinue();
+            return;
+        }
+
+        // Show doctor list to user
+        String input = null;
+        int choice = -1;
+        while (true) {
+            System.out.println("\nSelect Doctor to filter treatments:");
+            for (int i = 0; i < doctorNames.sizeOf(); i++) {
+                System.out.println((i + 1) + ". " + doctorNames.get(i));
+            }
+
+            input = medicalTreatmentUI.getUserInput(
+                    "Enter choice (1-" + doctorNames.sizeOf() + " or 'X' to exit): ",
+                    "Error: Choice cannot be blank."
+            );
+
+            if (input == null || input.equalsIgnoreCase("X")) {
+                messageUI.displayValidMessage("Operation canceled by user.");
+                command.pressEnterToContinue();
+                return;
+            }
+
+            try {
+                choice = Integer.parseInt(input);
+                if (choice >= 1 && choice <= doctorNames.sizeOf()) {
+                    break; // valid choice
+                } else {
+                    messageUI.displayInvalidMessage("Invalid choice. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                messageUI.displayInvalidMessage("Invalid input. Please enter a number or 'X' to exit.");
+            }
+        }
+
+        String selectedDoctor = doctorNames.get(choice - 1);
+
+        // Filter treatments for that doctor
+        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment
+                -> treatment.getDoctorName().equalsIgnoreCase(selectedDoctor)
+        );
 
         if (filteredList.sizeOf() > 0) {
-            medicalTreatmentUI.displayTreatmentReport(filteredList, "Treatment Report for Patient: " + patientName);
-            command.pressEnterToContinue();
+            medicalTreatmentUI.displayTreatmentReport(filteredList, "Treatment Report for Doctor: " + selectedDoctor);
         } else {
-            messageUI.displayInvalidMessage("No treatments found for Patient: " + patientName);
-            command.pressEnterToContinue();
+            messageUI.displayInvalidMessage("No treatments found for Doctor: " + selectedDoctor);
         }
+        command.pressEnterToContinue();
     }
-    
+
+    private void filterTreatmentByPatient() {
+        DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
+
+        if (treatmentList.sizeOf() == 0) {
+            messageUI.displayInvalidMessage("No treatments found.");
+            command.pressEnterToContinue();
+            return;
+        }
+
+        // Collect unique patients (IC + Name)
+        ArrayList<String> patientICs = new ArrayList<>();
+        ArrayList<String> patientNames = new ArrayList<>();
+
+        for (int i = 0; i < treatmentList.sizeOf(); i++) {
+            Treatment t = treatmentList.get(i);
+            if (!patientICs.contains(t.getPatientIC())) {
+                patientICs.add(t.getPatientIC());
+                patientNames.add(t.getPatientName());
+            }
+        }
+
+        if (patientICs.isEmpty()) {
+            messageUI.displayInvalidMessage("No patient IC found in treatments.");
+            command.pressEnterToContinue();
+            return;
+        }
+
+        // Show patient list to user
+        String input = null;
+        int choice = -1;
+        while (true) {
+            System.out.println("\nSelect Patient to filter treatments:");
+            for (int i = 0; i < patientICs.sizeOf(); i++) {
+                System.out.println((i + 1) + ". " + patientICs.get(i) + " | " + patientNames.get(i));
+            }
+
+            input = medicalTreatmentUI.getUserInput(
+                    "Enter choice (1-" + patientICs.sizeOf() + " or 'X' to exit): ",
+                    "Error: Choice cannot be blank."
+            );
+
+            if (input == null || input.equalsIgnoreCase("X")) {
+                messageUI.displayValidMessage("Operation canceled by user.");
+                command.pressEnterToContinue();
+                return;
+            }
+
+            try {
+                choice = Integer.parseInt(input);
+                if (choice >= 1 && choice <= patientICs.sizeOf()) {
+                    break; // valid choice
+                } else {
+                    messageUI.displayInvalidMessage("Invalid choice. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                messageUI.displayInvalidMessage("Invalid input. Please enter a number or 'X' to exit.");
+            }
+        }
+
+        String selectedPatientIC = patientICs.get(choice - 1);
+        String selectedPatientName = patientNames.get(choice - 1);
+
+        // Filter treatments for that patient
+        DoubleLinkedList<Treatment> filteredList = (DoubleLinkedList<Treatment>) treatmentList.where(treatment
+                -> treatment.getPatientIC().equalsIgnoreCase(selectedPatientIC));
+
+        if (filteredList.sizeOf() > 0) {
+            medicalTreatmentUI.displayTreatmentReport(
+                    filteredList,
+                    "Treatment Report for Patient: " + selectedPatientName + " (IC: " + selectedPatientIC + ")");
+        } else {
+            messageUI.displayInvalidMessage("No treatments found for Patient: " + selectedPatientIC);
+        }
+        command.pressEnterToContinue();
+
+    }
+
     // arrayStack for filter last 10 treatments record
     private void filterLast10Treatments() {
         ArrayStack<Treatment> treatmentStack = readTreatmentFromFileAsArrayStack();
@@ -523,6 +664,7 @@ public class MedicalTreatment {
         treatmentStack.clear();
     }
 
+    // updated
     private void generateSummaryReport() {
         DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
 
@@ -591,33 +733,36 @@ public class MedicalTreatment {
             printBarChart(doctorArray, doctorValArray, "Treatments by Doctor");
 
             // ===== Patient Summary =====
-            DoubleLinkedList<String> patientNames = new DoubleLinkedList<>();
+            DoubleLinkedList<String> patientIdentifiers = new DoubleLinkedList<>();  // IC + Name
             DoubleLinkedList<Integer> patientCounts = new DoubleLinkedList<>();
 
             for (int i = 0; i < treatmentList.sizeOf(); i++) {
                 Treatment t = treatmentList.get(i);
-                String patient = t.getPatientName();
+
+                // Combine IC + Name for display
+                String patientIdentifier = t.getPatientIC() + " - " + t.getPatientName();
 
                 boolean found = false;
-                for (int j = 0; j < patientNames.sizeOf(); j++) {
-                    if (patientNames.get(j).equalsIgnoreCase(patient)) {
+                for (int j = 0; j < patientIdentifiers.sizeOf(); j++) {
+                    if (patientIdentifiers.get(j).equalsIgnoreCase(patientIdentifier)) {
                         patientCounts.set(j, patientCounts.get(j) + 1);
                         found = true;
                         break;
                     }
                 }
                 if (!found) {
-                    patientNames.add(patient);
+                    patientIdentifiers.add(patientIdentifier);
                     patientCounts.add(1);
                 }
             }
 
-            String[] patientArray = new String[patientNames.sizeOf()];
+            String[] patientArray = new String[patientIdentifiers.sizeOf()];
             int[] patientValArray = new int[patientCounts.sizeOf()];
-            for (int i = 0; i < patientNames.sizeOf(); i++) {
-                patientArray[i] = patientNames.get(i);
+            for (int i = 0; i < patientIdentifiers.sizeOf(); i++) {
+                patientArray[i] = patientIdentifiers.get(i);
                 patientValArray[i] = patientCounts.get(i);
             }
+
             printBarChart(patientArray, patientValArray, "Treatments by Patient");
 
             System.out.println("\nTotal Treatments Recorded: " + treatmentList.sizeOf());
@@ -662,30 +807,31 @@ public class MedicalTreatment {
     }
 
     private DoubleLinkedList<Treatment> readTreatmentFromFileAsDLL() {
-        return dao.readTextFile(FILE_NAME, 8, this::parseTreatmentFromParts);
+        return dao.readTextFile(FILE_NAME, 9, this::parseTreatmentFromParts);
     }
 
     private ArrayStack<Treatment> readTreatmentFromFileAsArrayStack() {
-        return dao.readTextFileAsArrayStack(FILE_NAME, 8, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayStack(FILE_NAME, 9, this::parseTreatmentFromParts);
     }
 
     ArrayList<Treatment> readTreatmentFromFileAsArrayList() {
-        return dao.readTextFileAsArrayList(FILE_NAME, 8, this::parseTreatmentFromParts);
+        return dao.readTextFileAsArrayList(FILE_NAME, 9, this::parseTreatmentFromParts);
     }
 
     private Treatment parseTreatmentFromParts(String[] parts) {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         try {
             String id = parts[0];
-            String patientName = parts[1];
-            String doctorName = parts[2];
-            String diagnosis = parts[3];
-            String treatmentDetails = parts[4];
-            int quantity = Integer.parseInt(parts[5]);
-            boolean paymentStatus = parts[6].equalsIgnoreCase("Pay");
-            Date date = sdf.parse(parts[7]);
+            String patientIC = parts[1];
+            String patientName = parts[2];
+            String doctorName = parts[3];
+            String diagnosis = parts[4];
+            String treatmentDetails = parts[5];
+            int quantity = Integer.parseInt(parts[6]);
+            boolean paymentStatus = parts[7].equalsIgnoreCase("Pay");
+            Date date = sdf.parse(parts[8]);
 
-            Treatment treatment = new Treatment(id, patientName, doctorName, diagnosis, treatmentDetails, quantity, paymentStatus);
+            Treatment treatment = new Treatment(id, patientIC, patientName, doctorName, diagnosis, treatmentDetails, quantity, paymentStatus);
             treatment.setTreatmentDate(new Date());
             return treatment;
         } catch (Exception e) {

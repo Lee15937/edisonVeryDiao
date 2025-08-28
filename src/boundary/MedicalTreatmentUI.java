@@ -97,7 +97,7 @@ public class MedicalTreatmentUI {
         if (qtyStr == null) {
             return null; // user cancelled
         }
-        
+
         int qty = Integer.parseInt(qtyStr);
 
         //check if enough stock is available
@@ -177,6 +177,7 @@ public class MedicalTreatmentUI {
             System.out.println("\n=====================================================================");
             System.out.println("Treatment Details:");
             System.out.println("ID: " + treatment.getTreatmentId());
+            System.out.println("Patient IC: " + treatment.getPatientIC());
             System.out.println("Patient Name: " + treatment.getPatientName());
             System.out.println("Doctor Name: " + treatment.getDoctorName());
             System.out.println("Diagnosis: " + treatment.getDiagnosis());
@@ -202,15 +203,16 @@ public class MedicalTreatmentUI {
             System.out.println("Generated On: " + sdf.format(date));
             System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
-                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+                    "TreatmentID", "Patient IC", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
             System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
                         t.getTreatmentId(),
+                        t.getPatientIC(),
                         t.getPatientName(),
                         t.getDoctorName(),
                         t.getDiagnosis(),
@@ -238,15 +240,16 @@ public class MedicalTreatmentUI {
             System.out.println("Generated On: " + sdf.format(date));
             System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-5s %-25s %-20s%n",
-                    "TreatmentID", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+                    "TreatmentID", "Patient IC", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
             System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-5s %-25s %-20s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-5s %-20s %-20s%n",
                         t.getTreatmentId(),
+                        t.getPatientIC(),
                         t.getPatientName(),
                         t.getDoctorName(),
                         t.getDiagnosis(),

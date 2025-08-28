@@ -1,2 +1,3 @@
-T001#edi#Jogn#COVID-19#Paracetamol#2#Unpay#周四 8月 28 00:06:06 2025
-T002#choi#Jogn#Influences#Amoxicillin#1#Unpay#周四 8月 28 00:06:06 2025
+T001#050515120953#Abali#Amei#COVID-19#Amoxicillin#2#Unpay#周五 8月 29 03:22:56 2025
+T003#040825010915#Soon#Amei#Dyspepsia#Amoxicillin#2#Unpay#周五 8月 29 03:22:56 2025
+T004#050515120953#Abali#Amei#Flur#jinitaimei#2#Unpay#周六 8月 30 10:20:00 2025

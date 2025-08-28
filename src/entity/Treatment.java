@@ -11,6 +11,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     private static final long serialVersionUID = 1L;
 
     private String treatmentId;
+    private String patientIC;
     private String patientName;
     private String doctorName;
     private String diagnosis;
@@ -38,8 +39,9 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     
     
 
-    public Treatment(String treatmentId, String patientName, String doctorName, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus) {
+    public Treatment(String treatmentId, String patientIC, String patientName, String doctorName, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus) {
         this.treatmentId = treatmentId;
+        this.patientIC = patientIC;
         this.patientName = patientName;
         this.doctorName = doctorName;
         this.diagnosis = diagnosis;
@@ -57,6 +59,14 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentId = treatmentId;
     }
 
+    public String getPatientIC() {
+        return patientIC;
+    }
+
+    public void setPatientIC(String patientIC) {
+        this.patientIC = patientIC;
+    }
+    
     public String getPatientName() {
         return patientName;
     }
@@ -117,8 +127,8 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
         String formattedDate = (treatmentDate != null) ? sdf.format(treatmentDate) : "N/A";
-        return treatmentId + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + quantity + "#" +
-                (paymentStatus ? "Pay" : "Unpay") + "#" + formattedDate;
+        return treatmentId + "#" + patientIC + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + 
+                quantity + "#" + (paymentStatus ? "Pay" : "Unpay") + "#" + formattedDate;
     }
 
     @Override
