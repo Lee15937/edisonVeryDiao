@@ -9,12 +9,10 @@ import adt.QueueInterface;
 import adt.ListInterface;
 import entity.Patient;
 import java.util.Scanner;
-import java.util.Queue;
 
 public class PatientRegistrationForm {
 
     Scanner scanner = new Scanner(System.in);
-    private static int patientIDCounter = 1;
 
     public int getPatientChoice() {
         System.out.println("1. Register patient");
@@ -133,22 +131,6 @@ public class PatientRegistrationForm {
         }
     }
 
-    public Patient inputPatientDetails() {
-        String patientIC = inputPatientIC();
-        String patientName = inputPatientName();
-        String patientGender = inputPatientGender();
-        int patientAge = inputPatientAge();
-        String patientPhoneNo = inputPatientPhoneNo();
-        System.out.println();
-        
-        String patientID = String.format("P%03d", patientIDCounter++);
-        return new Patient(patientID, patientIC, patientName, patientGender, patientAge, patientPhoneNo);
-    }
-
-    public Patient nextPatient(Queue<Patient> patientQueue) {
-        return patientQueue.poll();
-    }
-
     public void listPatientList(ListInterface<Patient> patientList) {
         System.out.println("\n==============================");
         System.out.println("        Patient List      ");
@@ -177,72 +159,11 @@ public class PatientRegistrationForm {
         }
     }
 
-    public boolean updatePatientField(ListInterface<Patient> patientList, String patientID, String field, Object newValue) {
-        Patient p = null;
-        for (int i = 1; i <= patientList.getNumberOfEntries(); i++) {
-            Patient patient = patientList.getEntry(i);
-            if (patient.getPatientId().equals(patientID)) {
-                p = patient;
-                break;
-            }
-        }
-
-        if (p == null) {
-            System.out.println("Patient not found.");
-            return false;
-        }
-
-        switch (field.toLowerCase()) {
-            case "name":
-                p.setName((String) newValue);
-                break;
-            case "age":
-                p.setAge((Integer) newValue);
-                break;
-            case "gender":
-                p.setGender((String) newValue);
-                break;
-            case "ic":
-                p.setIC((String) newValue);
-                break;
-            case "phoneno":
-            case "phone":
-                p.setPhoneNo((String) newValue);
-                break;
-            default:
-                System.out.println("Invalid field name. Valid fields: name, age, gender, ic, phoneno");
-                return false;
-        }
-
-        return true;
-    }
-
-    public void patientReports(ListInterface<Patient> patientList) {
-        int count = patientList.getNumberOfEntries();
+    public void displayPatientReports(int totalPatients, int maleCount, int femaleCount) {
         System.out.println("=== Patient Report ===");
-        System.out.println("Total patients: " + count);
-
-        int maleCount = 0, femaleCount = 0;
-        for (int i = 1; i <= patientList.getNumberOfEntries(); i++) {
-            Patient p = patientList.getEntry(i);
-            if (p.getGender().equalsIgnoreCase("M")) {
-                maleCount++;
-            } else if (p.getGender().equalsIgnoreCase("F")) {
-                femaleCount++;
-            }
-        }
+        System.out.println("Total patients: " + totalPatients);
         System.out.println("Male patients: " + maleCount);
         System.out.println("Female patients: " + femaleCount);
-    }
-
-    public Patient findPatientById(ListInterface<Patient> patientList, String patientID) {
-        for (int i = 1; i <= patientList.getNumberOfEntries(); i++) {
-            Patient patient = patientList.getEntry(i);
-            if (patient.getPatientId().equals(patientID)) {
-                return patient;
-            }
-        }
-        return null;
     }
 
     public String inputPatientID() {
@@ -262,5 +183,17 @@ public class PatientRegistrationForm {
         int choice = scanner.nextInt();
         scanner.nextLine();
         return choice;
+    }
+
+    public void displaySuccessMessage(String message) {
+        System.out.println("✅ " + message);
+    }
+
+    public void displayErrorMessage(String message) {
+        System.out.println("X " + message);
+    }
+
+    public void displayMessage(String message) {
+        System.out.println(message);
     }
 }

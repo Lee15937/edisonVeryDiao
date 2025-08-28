@@ -1,1 +1,2 @@
-T001#edi#Jogn#COVID-19#Paracetamol#2#Unpay#周三 8月 27 13:13:17 2025
+T001#edi#Jogn#COVID-19#Paracetamol#2#Unpay#周四 8月 28 00:06:06 2025
+T002#choi#Jogn#Influences#Amoxicillin#1#Unpay#周四 8月 28 00:06:06 2025

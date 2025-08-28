@@ -4,6 +4,7 @@
  */
 package entity;
 
+import adt.ListInterface;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -23,8 +24,7 @@ public class DoctorEvent extends Doctor implements Serializable {
     private LocalDate leaveStartDate;
     private LocalDate leaveEndDate;
     private String leaveReason;
-
-    private List<TimeRange> shiftRanges;
+    private ListInterface<TimeRange> shiftRanges = new adt.ArrayList<>();
 
     public static DoctorEvent Leave(String id, String name,
             LocalDate start, int day,
@@ -38,17 +38,17 @@ public class DoctorEvent extends Doctor implements Serializable {
         return e;
     }
 
-    public static DoctorEvent Shift(String id, String name,
-            List<TimeRange> ranges) {
+    public static DoctorEvent Shift(String id, String name, ListInterface<TimeRange> ranges) {
         DoctorEvent e = new DoctorEvent(id, name);
         e.type = EventType.SHIFT;
-        e.shiftRanges = ranges;
+        for (int i = 1; i <= ranges.getNumberOfEntries(); i++) {
+            e.shiftRanges.add(ranges.getEntry(i));
+        }
         return e;
     }
 
     private DoctorEvent(String id, String name) {
         super(id, name);
-
     }
 
     public EventType getType() {
@@ -67,10 +67,7 @@ public class DoctorEvent extends Doctor implements Serializable {
         return leaveReason;
     }
 
-    public List<TimeRange> getShiftRanges() {
-        if (shiftRanges == null) {
-            shiftRanges = new ArrayList<>();
-        }
+    public ListInterface<TimeRange> getShiftRanges() {
         return shiftRanges;
     }
 
@@ -98,7 +95,7 @@ public class DoctorEvent extends Doctor implements Serializable {
         this.leaveReason = leaveReason;
     }
 
-    public void setShiftRanges(List<TimeRange> shiftRanges) {
+    public void setShiftRanges(ListInterface<TimeRange> shiftRanges) { // âœ… fixed type
         this.shiftRanges = shiftRanges;
     }
 
@@ -116,7 +113,11 @@ public class DoctorEvent extends Doctor implements Serializable {
             case LEAVE:
                 return String.format("| %-20s | %-20s | %-20s|", leaveStartDate, leaveEndDate, leaveReason);
             case SHIFT:
-                return shiftRanges.toString();
+                StringBuilder sb = new StringBuilder();
+                for (int i = 1; i <= shiftRanges.getNumberOfEntries(); i++) {
+                    sb.append(shiftRanges.getEntry(i).toString()).append(" ");
+                }
+                return sb.toString().trim();
             default:
                 return "Unknown Event";
         }

@@ -517,6 +517,4 @@ public class DoubleLinkedList<T> implements LinkedListInterface<T>, Serializable
             return data;
         }
     }
-    
-    
 }

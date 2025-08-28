@@ -10,15 +10,15 @@ import entity.Consultation;
 import entity.Consultation.Status;
 import utility.Command;
 import utility.MessageUI;
+import utility.Color;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.InputMismatchException;
 
-
 /**
  *
- * @author kosoo
+ * @author Ko Soon Lee
  */
 public class MedicalTreatment {
 
@@ -283,7 +283,8 @@ public class MedicalTreatment {
 
         command.pressEnterToContinue();
     }
-
+    
+    // arrayList for seach
     public void searchTreatments() {
         String treatmentId = medicalTreatmentUI.getTreatmentId();
 
@@ -406,7 +407,8 @@ public class MedicalTreatment {
             command.pressEnterToContinue();
         }
     }
-
+    
+    // arrayStack for descending the record
     public void listTreatmentByDescending() { // id by decending
         ArrayStack<Treatment> treatments = readTreatmentFromFileAsArrayStack();// for decending also array stack no list
         ArrayList<Treatment> newTreatments = new ArrayList<>();
@@ -498,7 +500,8 @@ public class MedicalTreatment {
             command.pressEnterToContinue();
         }
     }
-
+    
+    // arrayStack for filter last 10 treatments record
     private void filterLast10Treatments() {
         ArrayStack<Treatment> treatmentStack = readTreatmentFromFileAsArrayStack();
 
@@ -527,61 +530,95 @@ public class MedicalTreatment {
 
             medicalTreatmentUI.displayTreatmentReport(treatmentList, "Treatment Summary Report");
 
-            System.out.println("\n=== Summary of Treatments by Medicine ===");
-            ArrayList<String> countedMedicines = new ArrayList<>();
+            // ===== Medicine Summary =====
+            DoubleLinkedList<String> medicineNames = new DoubleLinkedList<>();
+            DoubleLinkedList<Integer> medicineQuantities = new DoubleLinkedList<>();
 
             for (int i = 0; i < treatmentList.sizeOf(); i++) {
                 Treatment t = treatmentList.get(i);
                 String medicine = t.getTreatmentDetails();
 
-                if (!countedMedicines.contains(medicine)) {
-                    int quantity = 0;
-
-                    // Count quantity across all treatments
-                    for (int j = 0; j < treatmentList.sizeOf(); j++) {
-                        Treatment t2 = treatmentList.get(j);
-                        if (t2.getTreatmentDetails().equalsIgnoreCase(medicine)) {
-                            quantity += t2.getQuantity(); 
-                        }
+                boolean found = false;
+                for (int j = 0; j < medicineNames.sizeOf(); j++) {
+                    if (medicineNames.get(j).equalsIgnoreCase(medicine)) {
+                        medicineQuantities.set(j, medicineQuantities.get(j) + t.getQuantity());
+                        found = true;
+                        break;
                     }
-
-                    System.out.println("Medicine: " + medicine + " | Total Quantity: " + quantity);
-                    countedMedicines.add(medicine);
+                }
+                if (!found) {
+                    medicineNames.add(medicine);
+                    medicineQuantities.add(t.getQuantity());
                 }
             }
 
-            // Count treatments per doctor
-            System.out.println("\nTreatments by Doctor:");
+            String[] medArray = new String[medicineNames.sizeOf()];
+            int[] qtyArray = new int[medicineQuantities.sizeOf()];
+            for (int i = 0; i < medicineNames.sizeOf(); i++) {
+                medArray[i] = medicineNames.get(i);
+                qtyArray[i] = medicineQuantities.get(i);
+            }
+            printBarChart(medArray, qtyArray, "Treatments by Medicine");
+
+            // ===== Doctor Summary =====
+            DoubleLinkedList<String> doctorNames = new DoubleLinkedList<>();
+            DoubleLinkedList<Integer> doctorCounts = new DoubleLinkedList<>();
+
             for (int i = 0; i < treatmentList.sizeOf(); i++) {
                 Treatment t = treatmentList.get(i);
                 String doctor = t.getDoctorName();
-                int count = 0;
 
-                // Count how many times this doctor appears in the list
-                for (int j = 0; j < treatmentList.sizeOf(); j++) {
-                    if (treatmentList.get(j).getDoctorName().equalsIgnoreCase(doctor)) {
-                        count++;
+                boolean found = false;
+                for (int j = 0; j < doctorNames.sizeOf(); j++) {
+                    if (doctorNames.get(j).equalsIgnoreCase(doctor)) {
+                        doctorCounts.set(j, doctorCounts.get(j) + 1);
+                        found = true;
+                        break;
                     }
                 }
-
-                System.out.println(doctor + ": " + count);
+                if (!found) {
+                    doctorNames.add(doctor);
+                    doctorCounts.add(1);
+                }
             }
 
-            // Count treatments per patient
-            System.out.println("\nTreatments by Patient:");
+            String[] doctorArray = new String[doctorNames.sizeOf()];
+            int[] doctorValArray = new int[doctorCounts.sizeOf()];
+            for (int i = 0; i < doctorNames.sizeOf(); i++) {
+                doctorArray[i] = doctorNames.get(i);
+                doctorValArray[i] = doctorCounts.get(i);
+            }
+            printBarChart(doctorArray, doctorValArray, "Treatments by Doctor");
+
+            // ===== Patient Summary =====
+            DoubleLinkedList<String> patientNames = new DoubleLinkedList<>();
+            DoubleLinkedList<Integer> patientCounts = new DoubleLinkedList<>();
+
             for (int i = 0; i < treatmentList.sizeOf(); i++) {
                 Treatment t = treatmentList.get(i);
                 String patient = t.getPatientName();
-                int count = 0;
 
-                for (int j = 0; j < treatmentList.sizeOf(); j++) {
-                    if (treatmentList.get(j).getPatientName().equalsIgnoreCase(patient)) {
-                        count++;
+                boolean found = false;
+                for (int j = 0; j < patientNames.sizeOf(); j++) {
+                    if (patientNames.get(j).equalsIgnoreCase(patient)) {
+                        patientCounts.set(j, patientCounts.get(j) + 1);
+                        found = true;
+                        break;
                     }
                 }
-
-                System.out.println(patient + ": " + count);
+                if (!found) {
+                    patientNames.add(patient);
+                    patientCounts.add(1);
+                }
             }
+
+            String[] patientArray = new String[patientNames.sizeOf()];
+            int[] patientValArray = new int[patientCounts.sizeOf()];
+            for (int i = 0; i < patientNames.sizeOf(); i++) {
+                patientArray[i] = patientNames.get(i);
+                patientValArray[i] = patientCounts.get(i);
+            }
+            printBarChart(patientArray, patientValArray, "Treatments by Patient");
 
             System.out.println("\nTotal Treatments Recorded: " + treatmentList.sizeOf());
             command.pressEnterToContinue();
@@ -589,6 +626,38 @@ public class MedicalTreatment {
         } else {
             messageUI.displayInvalidMessage("No treatments found.");
             command.pressEnterToContinue();
+        }
+    }
+
+    private void printBarChart(String[] labels, int[] values, String title) {
+        System.out.println("\n=== " + title + " ===");
+
+        // Define some colors (cycle if more labels than colors)
+        Color[] colors = {
+            Color.RED,
+            Color.GREEN,
+            Color.YELLOW,
+            Color.BLUE,
+            Color.CYAN,
+            Color.MAGENTA,
+            Color.BRIGHTBLUE,
+            Color.BRIGHTMAGENTA,
+            Color.BRIGHTYELLOW,
+            Color.BRIGHTGREEN
+        };
+
+        // Find max value for scaling
+        for (int i = 0; i < labels.length; i++) {
+            int barLength = values[i];
+            String bar = new String(new char[barLength]).replace("\0", "#");
+
+            // Pick color for this bar (cycle if labels > colors)
+            Color c = colors[i % colors.length];
+
+            // Apply color to bar only
+            String coloredBar = c + bar + Color.RESET;
+
+            System.out.printf("%-15s | %-50s (%d)\n", labels[i], coloredBar, values[i]);
         }
     }
 

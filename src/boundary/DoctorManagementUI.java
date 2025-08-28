@@ -12,12 +12,14 @@ import entity.Doctor;
 import entity.DoctorEvent;
 import entity.TimeRange;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
 
 public class DoctorManagementUI {
 
-    DoctorManagement doctorMgmt = new DoctorManagement();
     ListInterface<Doctor> doctorList = new adt.ArrayList<>();
     ListInterface<DoctorEvent> doctorEventList = new adt.ArrayList<>();
     ListInterface<TimeRange> timeRangeList = new adt.ArrayList<>();
@@ -28,513 +30,210 @@ public class DoctorManagementUI {
 
     public static final String DOCTOR_FILE = "src/DAO/doctor.txt";
 
-    public void runDoctorsManagement() {
-        doctorList = doctorMgmt.readDoctorFromFileAsArrayList();
-        int choice = -1;
-        do {
-            System.out.println("\nDoctor Management Menu:");
-            System.out.println("1. Add Doctor");
-            System.out.println("2. Search Doctor");
-            System.out.println("3. Doctor Management List");
-            System.out.println("4. Track Availability");
-            System.out.println("5. Summary Reports");
-            System.out.println("6. Edit/Update");
-            System.out.println("7. Remove");
-            System.out.println("8. Exit");
-            System.out.print("Enter your choice (1-8): ");
-            while (!scanner.hasNextInt()) {
-                scanner.next();
-                System.out.print("Enter your choice (1-8): ");
-            }
-            choice = scanner.nextInt();
-            scanner.nextLine();
-
-            switch (choice) {
-                case 1:
-                    doctorMgmt.loadDoctorsFromFile();
-                    addDoctor();
-                    break;
-                case 2:
-                    searchDoctor();
-                    break;
-                case 3:
-                    doctorManagementList(doctorList, doctorEventList);
-                    break;
-                case 4:
-                    trackAvailability();
-                    break;
-                case 5:
-                    summaryReports(doctorList);
-                    break;
-                case 6:
-                    editDoctor();
-                    break;
-                case 7:
-                    removeDoctor();
-                    break;
-                case 8:
-                    return;
-                default:
-                    System.out.println("\nInvalid choice.Please enter 1-8 only.");
-            }
-        } while (choice != 8);
+    public void displayDoctorManagementMenu() {
+        System.out.println("\nDoctor Management Menu:");
+        System.out.println("1. Add Doctor");
+        System.out.println("2. Search Doctor");
+        System.out.println("3. Doctor Management List");
+        System.out.println("4. Track Availability");
+        System.out.println("5. Summary Reports");
+        System.out.println("6. Edit/Update");
+        System.out.println("7. Remove");
+        System.out.println("8. Exit");
     }
 
-    public void addDoctor() {
-        String id = String.format("D%03d", doctorIdCounter++);
-        System.out.println("Assigned Doctor ID: " + id);
+    public int getMenuChoice() {
+        System.out.print("Enter your choice (1-8): ");
+        while (!scanner.hasNextInt()) {
+            System.out.print("Invalid input. Please enter a number.");
+            scanner.nextLine();
+            System.out.print("Enter your choice (1-8): ");
+        }
+        int choice = scanner.nextInt();
+        scanner.nextLine();
+        return choice;
+    }
 
-        String name, gender, phoneNo, email, schedule;
-        boolean availability;
-
+    public String inputDoctorName() {
+        String name;
         while (true) {
             System.out.print("Enter Doctor Name: ");
             name = scanner.nextLine().trim();
             if (!name.isEmpty()) {
-                break;
+                return name;
             }
             System.out.println("Doctor name cannot be empty.");
         }
+    }
 
+    public String inputDoctorGender() {
+        String gender;
         while (true) {
             System.out.print("Enter Doctor Gender (M/F): ");
             gender = scanner.nextLine().trim().toUpperCase();
 
             if (gender.equals("M")) {
                 gender = "Male";
-                break;
+                return gender;
             } else if (gender.equals("F")) {
                 gender = "Female";
-                break;
+                return gender;
             }
 
             System.out.println("Invalid input. Please enter M or F.");
         }
+    }
 
+    public String inputDoctorPhoneNumber() {
+        String phoneNo;
         while (true) {
             System.out.print("Enter Doctor Phone Number: ");
             phoneNo = scanner.nextLine().trim();
             if (phoneNo.matches("\\d{10,15}")) {
-                break;
+                return phoneNo;
             }
-            System.out.println("Invalid phone number. Please enter digits only (10â€“15 characters).");
+            System.out.println("Invalid phone number. Please enter digits only (10Ã¢â‚¬â€œ15 characters).");
         }
+    }
 
+    public String inputDoctorEmail() {
+        String email;
         while (true) {
             System.out.print("Enter Doctor Email: ");
             email = scanner.nextLine().trim();
             if (email.matches("^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")) {
-                break;
+                return email;
             }
             System.out.println("Invalid email. Please enter a valid format (example@domain.com).");
         }
+    }
 
-        String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \\d{1,2}(am|pm)-\\d{1,2}(am|pm)$";
-        String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* \\d{1,2}(am|pm)-\\d{1,2}(am|pm)$";
+    public String inputDoctorSchedule() {
+        String schedule;
+        String timeRegex = "([01]?\\d|2[0-3]):[0-5]\\d";
+        String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) "
+                + timeRegex + "-" + timeRegex + "$";
+        String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* "
+                + timeRegex + "-" + timeRegex + "$";
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("H:mm");
+
         while (true) {
-            System.out.print("Enter duty schedule (e.g., Mon-Fri 9am-5pm or Mon,Wed,Fri 9am-5pm): ");
+            System.out.print("Enter duty schedule (e.g., Mon-Fri 9:00-17:00 or Mon,Wed,Fri 9:00-17:00): ");
             schedule = scanner.nextLine().trim();
-            if (schedule.matches(pattern1) || schedule.matches(pattern2)) {
-                break;
-            }
-            System.out.println("Invalid format! Please use 'Mon-Fri 9am-5pm' or 'Mon,Wed,Fri 9am-5pm'.");
-        }
 
+            if (schedule.matches(pattern1) || schedule.matches(pattern2)) {
+                String timePart = schedule.substring(schedule.indexOf(" ") + 1);
+                String[] times = timePart.split("-");
+
+                LocalTime start = LocalTime.parse(times[0], fmt);
+                LocalTime end = LocalTime.parse(times[1], fmt);
+
+                if (start.isBefore(end)) {
+                    return schedule;
+                } else {
+                    System.out.println("Invalid time! End time must be after start time.");
+                }
+            } else {
+                System.out.println("Invalid format! Please use 'Mon-Fri 9:00-17:00' or 'Mon,Wed,Fri 9:00-17:00'.");
+            }
+        }
+    }
+
+    public boolean inputDoctorAilability() {
+        boolean availability;
         while (true) {
             System.out.print("Is the doctor available? (Y/N): ");
             String availInput = scanner.nextLine().trim().toUpperCase();
             if (availInput.equals("Y")) {
                 availability = true;
-                break;
+                return availability;
             } else if (availInput.equals("N")) {
                 availability = false;
-                break;
+                return availability;
             }
             System.out.println("Invalid input. Please enter Y or N.");
         }
-
-        Doctor newDoctor = new Doctor(id, name, gender, phoneNo, email, schedule, availability);
-        doctorList.add(newDoctor);
-
-        if (doctorMgmt != null) {
-            dao.saveToFile(doctorList, DOCTOR_FILE);
-        }
-
-        System.out.println("Doctor added successfully: " + newDoctor.getName());
     }
 
-    public void searchDoctor() {
-        while (true) {
-            System.out.print("Enter Doctor ID: ");
-            String id = scanner.nextLine().trim();
+    public Doctor inputDoctorDetails() {
+        String doctorId = String.format("D%03d", doctorIdCounter++);
+        System.out.println("Assigned Doctor ID: " + doctorId);
 
-            ArrayList<Doctor> doctors = doctorMgmt.readDoctorFromFileAsArrayList();
-            Doctor foundDoctor = null;
+        String doctorName = inputDoctorName();
+        String doctorGender = inputDoctorGender();
+        String doctorPhoneNo = inputDoctorPhoneNumber();
+        String doctorEmail = inputDoctorEmail();
+        String doctorSchedule = inputDoctorSchedule();
+        boolean doctorAilability = inputDoctorAilability();
 
-            for (Doctor d : doctors) {
-                if (d.getDoctorId().equalsIgnoreCase(id)) {
-                    foundDoctor = d;
-                    break;
-                }
-            }
-
-            if (foundDoctor != null) {
-                System.out.println("\nDoctor Found:");
-                System.out.println("ID           : " + foundDoctor.getDoctorId());
-                System.out.println("Name         : " + foundDoctor.getName());
-                System.out.println("Gender       : " + foundDoctor.getGender());
-                System.out.println("Phone Number : " + foundDoctor.getPhoneNo());
-                System.out.println("Email        : " + foundDoctor.getEmail());
-                System.out.println("Duty Schedule: " + foundDoctor.getDutySchedule());
-                System.out.println("Availability : " + (foundDoctor.isAvailability() ? "Available" : "Not Available"));
-
-                for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
-                    DoctorEvent event = doctorEventList.getEntry(i);
-                    if (event.getDoctorId().equalsIgnoreCase(foundDoctor.getDoctorId())) {
-                        boolean firstLine = true;
-                        for (TimeRange tr : event.getShiftRanges()) {
-                            if (firstLine) {
-                                System.out.println("Shift        : " + tr.toString());
-                                firstLine = false;
-                            } else {
-                                System.out.println("               " + tr.toString());
-                            }
-                        }
-                    }
-                }
-                break;
-            } else {
-                ChoiceYesOrNo();
-            }
-        }
+        return new Doctor(doctorId, doctorName, doctorGender, doctorPhoneNo, doctorEmail, doctorSchedule, doctorAilability);
     }
 
-    public void doctorManagementList(ListInterface<Doctor> dortorList, ListInterface<DoctorEvent> dortorEventList) {
-        doctorMgmt.getDoctorList();
-        String header1 = String.format("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
-                "ID", "Name", "Gender", "Phone Number", "Email", "Availability");
-        String header2 = String.format("| %-10s | %-20s | %-25s |\n",
-                "ID", "Name", "Duty Schedule");
-        String header3 = String.format("| %-10s | %-20s | %-25s | %-25s |\n",
-                "ID", "Name", "Duty Schedule", "Shift");
-        String header4 = String.format("| %-10s | %-20s | %-15s | %-15s | %-20s |\n",
-                "ID", "Name", "Start Date", "End Date", "Reason");
-
-        String line1 = "-----------------------------------------------------------------------------------------------------------------------";
-        String line2 = "-----------------------------------------------------------------";
-        String line3 = "---------------------------------------------------------------------------------------------";
-        String line4 = "------------------------------------------------------------------------------------------------";
-
-        Scanner scanner = new Scanner(System.in);
-
-        while (true) {
-            System.out.println("\nDoctor Management List");
-            System.out.println("1. Doctor List");
-            System.out.println("2. Duty Schedule List");
-            System.out.println("3. Doctor Shift List");
-            System.out.println("4. Doctor Leave List");
-            System.out.println("5. Back To Doctor Management Menu");
-
-            System.out.print("Enter choice (1-5): ");
-            String action = scanner.nextLine().trim();
-
-            if (action.equals("1")) {
-                System.out.println(line1);
-                System.out.println(header1);
-                System.out.println(line1);
-                boolean hasRows = false;
-                for (int i = 1; i <= dortorList.getNumberOfEntries(); i++) {
-                    Doctor doc = dortorList.getEntry(i);
-                    hasRows = true;
-                    String row = String.format("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
-                            doc.getDoctorId(), doc.getName(), doc.getGender(),
-                            doc.getPhoneNo(), doc.getEmail(),
-                            doc.isAvailability() ? "Available" : "Not Available");
-                    System.out.print(row);
-                }
-                if (!hasRows) {
-                    System.out.println("| No data available.".concat(" ".repeat(line1.length() - 20)) + "|");
-                }
-                System.out.println(line1);
-
-            } else if (action.equals("2")) {
-                System.out.println(line2);
-                System.out.println(header2);
-                System.out.println(line2);
-                boolean hasRows = false;
-                for (int i = 1; i <= dortorList.getNumberOfEntries(); i++) {
-                    Doctor doc = dortorList.getEntry(i);
-                    hasRows = true;
-                    String row = String.format("| %-10s | %-20s | %-25s |\n",
-                            doc.getDoctorId(), doc.getName(), doc.getDutySchedule());
-                    System.out.print(row);
-                }
-                if (!hasRows) {
-                    System.out.println("| No data available.".concat(" ".repeat(line1.length() - 20)) + "|");
-                }
-                System.out.println(line2);
-
-            } else if (action.equals("3")) {
-                System.out.println(line3);
-                System.out.println(header3);
-                System.out.println(line3);
-                boolean hasRows = false;
-
-                for (int i = 1; i <= dortorEventList.getNumberOfEntries(); i++) {
-                    DoctorEvent event = dortorEventList.getEntry(i);
-
-                    Doctor doc = null;
-                    for (int j = 1; j <= doctorList.getNumberOfEntries(); j++) {
-                        Doctor tempDoc = doctorList.getEntry(j);
-                        if (tempDoc.getDoctorId().equals(event.getDoctorId())) {
-                            doc = tempDoc;
-                            break;
-                        }
-                    }
-
-                    if (doc != null) {
-                        boolean firstLine = true;
-                        for (TimeRange tr : event.getShiftRanges()) {
-                            hasRows = true;
-                            String row = String.format("| %-10s | %-20s | %-25s | %-25s |\n",
-                                    firstLine ? doc.getDoctorId() : "",
-                                    firstLine ? doc.getName() : "",
-                                    firstLine ? doc.getDutySchedule() : "",
-                                    tr.toString());
-                            System.out.print(row);
-                            firstLine = false;
-                        }
-                    }
-                }
-
-                if (!hasRows) {
-                    System.out.println("| No data available.".concat(" ".repeat(line3.length() - 20)) + "|");
-                }
-                System.out.println(line3);
-
-            } else if (action.equals("4")) {
-                System.out.println(line4);
-                System.out.println(header4);
-                System.out.println(line4);
-                boolean hasRows = false;
-
-                for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
-                    DoctorEvent event = doctorEventList.getEntry(i);
-
-                    if (event.isLeave()) {
-                        Doctor doc = null;
-                        for (int j = 1; j <= doctorList.getNumberOfEntries(); j++) {
-                            Doctor tempDoc = doctorList.getEntry(j);
-                            if (tempDoc.getDoctorId().equals(event.getDoctorId())) {
-                                doc = tempDoc;
-                                break;
-                            }
-                        }
-
-                        if (doc != null) {
-                            hasRows = true;
-                            String row = String.format("| %-10s | %-20s | %-15s | %-15s | %-20s |\n",
-                                    doc.getDoctorId(), doc.getName(),
-                                    event.getLeaveStartDate(), event.getLeaveEndDate(), event.getLeaveReason());
-                            System.out.print(row);
-                        }
-                    }
-                }
-
-                if (!hasRows) {
-                    System.out.println("| No data available.".concat(" ".repeat(line4.length() - 20)) + "|");
-                }
-                System.out.println(line4);
-
-            } else if (action.equals("5")) {
-                System.out.println("Returning to Doctor Management Menu...");
-                return;
-
-            } else {
-                System.out.println("\nInvalid choice. Please enter 1-5 only.");
-            }
-        }
+    public void searchDoctorDetail(Doctor foundDoctor) {
+        System.out.println("\nDoctor Found:");
+        System.out.println("ID           : " + foundDoctor.getDoctorId());
+        System.out.println("Name         : " + foundDoctor.getName());
+        System.out.println("Gender       : " + foundDoctor.getGender());
+        System.out.println("Phone Number : " + foundDoctor.getPhoneNo());
+        System.out.println("Email        : " + foundDoctor.getEmail());
+        System.out.println("Duty Schedule: " + foundDoctor.getDutySchedule());
+        System.out.println("Availability : " + (foundDoctor.isAvailability() ? "Available" : "Not Available"));
     }
 
-    public void ChoiceYesOrNo() {
-        while (true) {
-            System.out.print("\nDo you want to enter the Doctor ID again? (Y/N): ");
-            String retry = scanner.nextLine().trim();
-            if (retry.equalsIgnoreCase("Y")) {
-                break;
-            } else if (retry.equalsIgnoreCase("N")) {
-                System.out.println("Returning to Doctor Management Menu...");
-                runDoctorsManagement();
-            } else {
-                System.out.println("\nInvalid input.Please type 'Y' for yes or 'N' for no.");
-            }
-        }
+    public void doctorListMenu() {
+        System.out.println("\nDoctor Management List");
+        System.out.println("1. Doctor List");
+        System.out.println("2. Duty Schedule List");
+        System.out.println("3. Doctor Shift List");
+        System.out.println("4. Doctor Leave List");
+        System.out.println("5. Back To Doctor Management Menu");
     }
 
-    public void trackAvailability() {
-        String doctorId = getValidDoctorId();
-        if (doctorId == null) {
-            return;
+    public int doctorListMenuAction() {
+        System.out.print("Choose an option: ");
+        while (!scanner.hasNextInt()) {
+            System.out.print("Invalid input. Please enter a number.");
+            scanner.nextLine();
         }
 
-        Doctor selectedDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                selectedDoctor = d;
-                break;
-            }
-        }
-
-        if (selectedDoctor == null) {
-            System.out.println("Doctor with ID " + doctorId + " not found.");
-            return;
-        }
-
-        System.out.println("Selected Doctor: " + selectedDoctor.getName());
-        System.out.println("Duty Schedule: " + selectedDoctor.getDutySchedule());
-
-        while (true) {
-            System.out.println("1. Assign Shift");
-            System.out.println("2. Make Leave");
-            System.out.println("3. Back To Doctor Management Menu");
-
-            System.out.print("Enter choice (1-3): ");
-            String action = scanner.nextLine().trim();
-
-            if (action.equals("1")) {
-                assignShift(selectedDoctor.getDoctorId());
-            } else if (action.equals("2")) {
-                makeLeave(selectedDoctor.getDoctorId());
-            } else if (action.equals("3")) {
-                return;
-            } else {
-                System.out.println("\nInvalid choice. Please enter 1-3 only.");
-            }
-        }
+        int action = scanner.nextInt();
+        scanner.nextLine();
+        return action;
     }
 
-    public void assignShift(String doctorId) {
-        Doctor targetDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                targetDoctor = d;
-                break;
-            }
-        }
-        if (targetDoctor == null) {
-            System.out.println("Doctor not found.");
-            return;
-        }
-
-        String name = targetDoctor.getName();
-        List<TimeRange> dutyRanges = doctorMgmt.parseDutySchedule(targetDoctor.getDutySchedule());
-        if (dutyRanges.isEmpty()) {
-            System.out.println("\nInvalid duty schedule.");
-            return;
-        }
-
-        System.out.println("Allowed shift periods based on duty schedule:");
-        for (TimeRange tr : dutyRanges) {
-            System.out.println(" - " + tr);
-        }
-
-        ListInterface<TimeRange> assignedShifts = new adt.ArrayList<>();
-
-        while (true) {
-            System.out.print("Enter Shift Time (e.g., 9am-11am). Leave blank to finish: ");
-            String shiftTimeStr = scanner.nextLine().trim();
-            if (shiftTimeStr.isEmpty()) {
-                break;
-            }
-
-            TimeRange shiftRange = doctorMgmt.parseTimeRange(shiftTimeStr);
-            if (shiftRange == null) {
-                System.out.println("\nInvalid time.");
-                continue;
-            }
-
-            boolean withinDuty = false;
-            for (TimeRange duty : dutyRanges) {
-                if (duty.contains(shiftRange)) {
-                    withinDuty = true;
-                    break;
-                }
-            }
-            if (!withinDuty) {
-                System.out.println("\nShift Time Not Within Allowed.");
-                continue;
-            }
-
-            boolean overlaps = false;
-            for (int i = 1; i <= assignedShifts.getNumberOfEntries(); i++) {
-                if (assignedShifts.getEntry(i).overlapsWith(shiftRange)) {
-                    overlaps = true;
-                    break;
-                }
-            }
-            if (overlaps) {
-                System.out.println("\nShift overlaps with existing.");
-                continue;
-            }
-
-            assignedShifts.add(shiftRange);
-            System.out.println("Shift added: " + shiftRange);
-        }
-
-        if (assignedShifts.isEmpty()) {
-            System.out.println("\nNo shifts assigned.");
-            return;
-        }
-
-        java.util.List<TimeRange> shiftList = new java.util.ArrayList<>();
-        for (int i = 1; i <= assignedShifts.getNumberOfEntries(); i++) {
-            shiftList.add(assignedShifts.getEntry(i));
-        }
-
-        DoctorEvent newShift = DoctorEvent.Shift(doctorId, name, shiftList);
-        doctorEventList.add(newShift);
-
-        System.out.println("Shifts assigned to Doctor " + name + ":");
-        for (TimeRange tr : shiftList) {
-            System.out.println(" - " + tr);
-        }
+    public void trackAvailabilityMenu() {
+        System.out.println("1. Assign Shift");
+        System.out.println("2. Make Leave");
+        System.out.println("3. Back To Doctor Management Menu");
     }
 
-    public void makeLeave(String doctorId) {
-        Doctor targetDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                targetDoctor = d;
-                break;
-            }
-        }
-        if (targetDoctor == null) {
-            System.out.println("Doctor not found.");
-            return;
-        }
+    public String getShiftInput() {
+        System.out.print("Enter Shift Time (e.g., 09:00-11:00). Leave blank to finish: ");
+        return scanner.nextLine().trim();
+    }
 
-        String name = targetDoctor.getName();
+    public LocalDate getStartDate() {
         LocalDate startDate = null;
-
         while (startDate == null) {
             System.out.print("Enter start date for leave (YYYY-MM-DD): ");
-            String startDateStr = scanner.nextLine().trim();
+            String input = scanner.nextLine().trim();
             try {
-                startDate = LocalDate.parse(startDateStr);
+                startDate = LocalDate.parse(input);
             } catch (Exception e) {
                 System.out.println("\nInvalid date.");
             }
         }
+        return startDate;
+    }
 
+    public int getLeaveDays() {
         int days = 0;
         while (days <= 0) {
             System.out.print("Enter number of leave days: ");
-            String daysStr = scanner.nextLine().trim();
+            String input = scanner.nextLine().trim();
             try {
-                days = Integer.parseInt(daysStr);
+                days = Integer.parseInt(input);
                 if (days <= 0) {
                     System.out.println("\nInvalid number.");
                 }
@@ -542,7 +241,10 @@ public class DoctorManagementUI {
                 System.out.println("\nInvalid number.");
             }
         }
+        return days;
+    }
 
+    public String getReason() {
         String reason = "";
         while (reason.isEmpty()) {
             System.out.print("Enter reason for leave: ");
@@ -551,63 +253,22 @@ public class DoctorManagementUI {
                 System.out.println("\nCannot be empty.");
             }
         }
-
-        int qty = doctorEventList.getNumberOfEntries() + 1;
-
-        DoctorEvent newLeave = DoctorEvent.Leave(doctorId, name, startDate, days, reason, qty);
-        doctorEventList.add(newLeave);
-
-        LocalDate endDate = startDate.plusDays(days);
-        System.out.printf("Doctor %s is on leave from %s to %s. Reason: %s\n",
-                name, startDate, endDate, reason);
+        return reason;
     }
 
-    public void summaryReports(ListInterface<Doctor> dortorList) {
-        while (true) {
-            System.out.println("\nDoctor Management Summary Reports");
-            System.out.println("1. Doctor Leave");
-            System.out.println("2. Doctor ");
-            System.out.println("3. Back To Doctor Management Menu");
-
-            System.out.print("Enter choice (1-4): ");
-            String action = scanner.nextLine().trim();
-
-            if (action.equals("1")) {
-                doctorLeaveSummaryReports(dortorList);
-            } else if (action.equals("2")) {
-
-            } else if (action.equals("3")) {
-                System.out.println("Returning to Doctor Management Menu...");
-                return;
-            } else {
-                System.out.println("\nInvalid choice.Please enter 1-3 only.");
-            }
-            continue;
-        }
+    public void showMessage(String message) {
+        System.out.println(message);
     }
 
-    public void doctorLeaveSummaryReports(ListInterface<Doctor> dortorList) {
-        System.out.println("------------------------------------------------");
-        System.out.println("|      Doctor Leave Summary Report             |");
-        System.out.println("------------------------------------------------");
-        System.out.printf("| %-10s | %-20s | %-8s |\n", "ID", "Name", "Quantity");
-        System.out.println("------------------------------------------------");
-        boolean hasLeave = false;
-        for (int i = 1; i <= dortorList.getNumberOfEntries(); i++) {
-            Doctor doc = dortorList.getEntry(i);
-            hasLeave = true;
-            List<DoctorEvent> leaves = doc.getLeaves();
-            int qtys = leaves.size();
-            String row = String.format("| %-10s | %-20s | %-8d |\n", doc.getDoctorId(), "Dr." + doc.getName(), qtys);
-            System.out.print(row);
-        }
-        if (!hasLeave) {
-            System.out.println("|    No leave found in the system.            |");
-        }
-        System.out.println("------------------------------------------------");
+    public void summaryReportsMenu() {
+        System.out.println("\nDoctor Management Summary Reports");
+        System.out.println("1. Doctor Duty Schedule Summary");
+        System.out.println("2. Doctor Leave Summary");
+        System.out.println("3. Back To Doctor Management Menu");
     }
 
     public String getValidDoctorId() {
+        DoctorManagement doctorMgmt = new DoctorManagement();
         while (true) {
             System.out.print("Enter Doctor ID: ");
             String id = scanner.nextLine().trim();
@@ -625,141 +286,143 @@ public class DoctorManagementUI {
             if (foundDoctor != null) {
                 return id;
             } else {
-                System.out.println("\n Doctor with ID " + id + " not found.");
-                ChoiceYesOrNo();
+                System.out.println("\nDoctor with ID " + id + " not found.");
+                if (!ChoiceYesOrNo()) {
+                    System.out.println("Returning to Doctor Management Menu...");
+                    return null;
+                }
             }
         }
     }
 
-    public void editDoctor() {
-        String id = getValidDoctorId();
-        if (id == null) {
-            return;
-        }
-
-        Doctor doc = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(id)) {
-                doc = d;
-                break;
+    public boolean ChoiceYesOrNo() {
+        while (true) {
+            System.out.print("\nDo you want to enter the Doctor ID again? (Y/N): ");
+            String retry = scanner.nextLine().trim();
+            if (retry.equalsIgnoreCase("Y")) {
+                return true;
+            } else if (retry.equalsIgnoreCase("N")) {
+                return false;
+            } else {
+                System.out.println("\nInvalid input. Please type 'Y' for yes or 'N' for no.");
             }
         }
+    }
 
-        if (doc == null) {
-            System.out.println("Doctor not found.");
-            return;
-        }
-
-        System.out.println("Editing Doctor: " + doc.getName() + " (" + doc.getDoctorId() + ")");
-
-        System.out.print("Enter new name (leave blank to keep '" + doc.getName() + "'): ");
+    public String inputEditDoctorName(String currentName) {
+        System.out.print("Enter new name (leave blank to keep '" + currentName + "'): ");
         String newName = scanner.nextLine().trim();
-        if (!newName.isEmpty()) {
-            doc.setName(newName);
-        }
+        return newName.isEmpty() ? currentName : newName;
+    }
 
+    public String inputEditDoctorPhone(String currentPhone) {
         while (true) {
-            System.out.print("Enter new phone number (10â€“15 digits) (leave blank to keep '" + doc.getPhoneNo() + "'): ");
+            System.out.print("Enter new phone number (10â€“15 digits) (leave blank to keep '" + currentPhone + "'): ");
             String newPhone = scanner.nextLine().trim();
             if (newPhone.isEmpty()) {
-                break;
+                return currentPhone;
             }
             if (newPhone.matches("\\d{10,15}")) {
-                doc.setPhoneNo(newPhone);
-                break;
-            } else {
-                System.out.println("\nInvalid format.");
+                return newPhone;
             }
+            System.out.println("Invalid format.");
         }
-
-        while (true) {
-            System.out.print("Enter new email (leave blank to keep '" + doc.getEmail() + "'): ");
-            String newEmail = scanner.nextLine().trim();
-            if (newEmail.isEmpty()) {
-                break;
-            }
-            if (newEmail.matches("^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")) {
-                doc.setEmail(newEmail);
-                break;
-            } else {
-                System.out.println("\nInvalid format.");
-            }
-        }
-
-        String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) \\d{1,2}(am|pm)-\\d{1,2}(am|pm)$";
-        String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* \\d{1,2}(am|pm)-\\d{1,2}(am|pm)$";
-        while (true) {
-            System.out.print("Enter new duty schedule (leave blank to keep '" + doc.getDutySchedule() + "'): ");
-            String newSchedule = scanner.nextLine().trim();
-            if (newSchedule.isEmpty()) {
-                break;
-            }
-            if (newSchedule.matches(pattern1) || newSchedule.matches(pattern2)) {
-                doc.setDutySchedule(newSchedule);
-                break;
-            } else {
-                System.out.println("\nInvalid format.");
-            }
-        }
-
-        while (true) {
-            System.out.print("Is the doctor available? (Y/N, leave blank to keep current '"
-                    + (doc.isAvailability() ? "Yes" : "No") + "'): ");
-            String availInput = scanner.nextLine().trim().toUpperCase();
-            if (availInput.isEmpty()) {
-                break;
-            }
-            if (availInput.equals("Y")) {
-                doc.setAvailability(true);
-                break;
-            } else if (availInput.equals("N")) {
-                doc.setAvailability(false);
-                break;
-            }
-            System.out.println("\nInvalid format.");
-        }
-
-        dao.saveToFile(doctorList, DOCTOR_FILE);
-        System.out.println("\nDoctor Updated Successfully.");
     }
 
-    public void removeDoctor() {
-        String doctorId = getValidDoctorId();
-        if (doctorId == null) {
-            return;
-        }
-
-        Doctor doc = null;
-        int indexToRemove = -1;
-
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                doc = d;
-                indexToRemove = i;
-                break;
+    public String inputEditDoctorEmail(String currentEmail) {
+        while (true) {
+            System.out.print("Enter new email (leave blank to keep '" + currentEmail + "'): ");
+            String newEmail = scanner.nextLine().trim();
+            if (newEmail.isEmpty()) {
+                return currentEmail;
             }
+            if (newEmail.matches("^[\\w.-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")) {
+                return newEmail;
+            }
+            System.out.println("Invalid format.");
+        }
+    }
+
+public String inputEditDoctorSchedule(String currentSchedule, Doctor doctor, ListInterface<DoctorEvent> doctorEventList) {
+    String timeRegex = "([01]?\\d|2[0-3]):[0-5]\\d";
+    String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) "
+            + timeRegex + "-" + timeRegex + "$";
+    String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* "
+            + timeRegex + "-" + timeRegex + "$";
+
+    while (true) {
+        System.out.print("Enter new duty schedule (leave blank to keep '" + currentSchedule + "'): ");
+        String newSchedule = scanner.nextLine().trim();
+
+        if (newSchedule.isEmpty()) {
+            return currentSchedule;
         }
 
-        if (doc == null) {
-            System.out.println("Doctor not found.");
-            return;
-        }
+        if (newSchedule.matches(pattern1) || newSchedule.matches(pattern2)) {
+            try {
+                String timePart = newSchedule.substring(newSchedule.indexOf(" ") + 1);
+                String[] times = timePart.split("-");
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
 
-        System.out.print("Are you sure you want to remove Dr. " + doc.getName() + " (Y/N)? ");
-        String confirm = scanner.nextLine().trim();
-        if (!confirm.equalsIgnoreCase("Y")) {
-            System.out.println("Removal cancelled.");
-            return;
-        }
+                LocalTime start = LocalTime.parse(times[0], timeFormatter);
+                LocalTime end = LocalTime.parse(times[1], timeFormatter);
 
-        Doctor removed = doctorList.remove(indexToRemove);
-        if (removed != null) {
-            dao.saveToFile(doctorList, DOCTOR_FILE);
-            System.out.println("… Doctor " + doc.getName() + " removed successfully.");
+                if (!start.isBefore(end)) {
+                    System.out.println("XS Invalid time! End time must be after start time.");
+                    continue;
+                }
+
+                boolean conflictFound = false;
+                for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
+                    DoctorEvent shiftEvent = doctorEventList.getEntry(i);
+                    if (shiftEvent.getDoctorId().equals(doctor.getDoctorId()) && shiftEvent.isShift()) {
+                        for (int j = 1; j <= shiftEvent.getShiftRanges().getNumberOfEntries(); j++) {
+                            TimeRange tr = shiftEvent.getShiftRanges().getEntry(j);
+                            if (tr.getStart().isBefore(start) || tr.getEnd().isAfter(end)) {
+                                conflictFound = true;
+                                System.out.println(" Conflict: Shift " + tr + " does not fit inside " 
+                                                   + start + "-" + end);
+                            }
+                        }
+                    }
+                }
+
+                if (conflictFound) {
+                    System.out.println("X Cannot set this duty schedule because some shifts are outside the time.");
+                    continue;
+                }
+
+                return newSchedule;
+
+            } catch (DateTimeParseException e) {
+                System.out.println("X Error parsing time. Please use format like 'Mon-Fri 09:00-17:00'");
+            }
         } else {
-            System.out.println("Failed to remove doctor.");
+            System.out.println("X Invalid format. Example: 'Mon-Fri 09:00-17:00' or 'Mon,Wed,Fri 09:00-17:00'");
         }
+    }
+}
+
+    public boolean inputEditDoctorAvailability(boolean currentAvailability) {
+        while (true) {
+            System.out.print("Is the doctor available? (Y/N, leave blank to keep current '"
+                    + (currentAvailability ? "Yes" : "No") + "'): ");
+            String availInput = scanner.nextLine().trim().toUpperCase();
+            if (availInput.isEmpty()) {
+                return currentAvailability;
+            }
+            if (availInput.equals("Y")) {
+                return true;
+            } else if (availInput.equals("N")) {
+                return false;
+            }
+            System.out.println("Invalid input. Please enter Y or N.");
+        }
+    }
+
+    public boolean confirmRemoval(String doctorName) {
+        System.out.print("Are you sure you want to remove Dr. " + doctorName + " (Y/N)? ");
+        String confirm = scanner.nextLine().trim().toUpperCase();
+        return confirm.equals("Y");
     }
 }
