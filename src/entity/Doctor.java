@@ -5,15 +5,11 @@
 package entity;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  *
@@ -174,5 +170,6 @@ public class Doctor implements Iterable<Doctor>, Serializable {
     public Iterator<Doctor> iterator() {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+
 
 }
