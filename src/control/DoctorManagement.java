@@ -1,12 +1,6 @@
 package control;
 
-import entity.Doctor;
 import DAO.Dao;
-import java.util.function.Function;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Locale;
 import adt.*;
 import boundary.DoctorManagementUI;
 import entity.Doctor;
@@ -15,7 +9,6 @@ import entity.TimeRange;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class DoctorManagement {
 
@@ -761,4 +754,5 @@ public class DoctorManagement {
         DoctorManagement doctormanagement = new DoctorManagement();
         doctormanagement.runDoctorsManagement();
     }
+
 }
