@@ -4,7 +4,6 @@
  */
 package boundary;
 
-import DAO.Dao;
 import adt.ArrayList;
 import adt.ListInterface;
 import control.DoctorManagement;
@@ -15,20 +14,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Scanner;
 
 public class DoctorManagementUI {
 
-    ListInterface<Doctor> doctorList = new adt.ArrayList<>();
-    ListInterface<DoctorEvent> doctorEventList = new adt.ArrayList<>();
-    ListInterface<TimeRange> timeRangeList = new adt.ArrayList<>();
     Scanner scanner = new Scanner(System.in);
     public static int doctorIdCounter = 1;
     public adt.ArrayList<Doctor> doctors = new adt.ArrayList<>();
-    private Dao<Doctor> dao = new Dao<>();
-
-    public static final String DOCTOR_FILE = "src/DAO/doctor.txt";
 
     public void displayDoctorManagementMenu() {
         System.out.println("\nDoctor Management Menu:");
@@ -426,3 +418,4 @@ public String inputEditDoctorSchedule(String currentSchedule, Doctor doctor, Lis
         return confirm.equals("Y");
     }
 }
+
