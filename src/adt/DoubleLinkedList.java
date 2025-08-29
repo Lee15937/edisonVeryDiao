@@ -2,7 +2,7 @@ package adt;
 
 /**
  *
- * @author kosoo
+ * @author Ko Soon Lee
  */
 import java.io.Serializable;
 import java.util.Iterator;

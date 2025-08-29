@@ -143,10 +143,16 @@ public class MedicalTreatment {
                 command.pressEnterToContinue();
                 return;
             }
-
+            
+            // convert the consultation String format date time to my Date treatmentDate
+            String dateTimeStr = selectedConsultation.getDate() + " " + selectedConsultation.getTime();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            Date treatmentDate = sdf.parse(dateTimeStr);
+            
             treatment.setPatientIC(selectedConsultation.getPatientIC());
             treatment.setPatientName(selectedConsultation.getPatientName());
             treatment.setDoctorName(selectedConsultation.getDoctorName());
+            treatment.setTreatmentDate(treatmentDate);
             treatment.setTreatmentId(id);
 
             DoubleLinkedList<Treatment> treatments = readTreatmentFromFileAsDLL();
@@ -819,7 +825,7 @@ public class MedicalTreatment {
     }
 
     private Treatment parseTreatmentFromParts(String[] parts) {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         try {
             String id = parts[0];
             String patientIC = parts[1];
@@ -831,8 +837,7 @@ public class MedicalTreatment {
             boolean paymentStatus = parts[7].equalsIgnoreCase("Pay");
             Date date = sdf.parse(parts[8]);
 
-            Treatment treatment = new Treatment(id, patientIC, patientName, doctorName, diagnosis, treatmentDetails, quantity, paymentStatus);
-            treatment.setTreatmentDate(new Date());
+            Treatment treatment = new Treatment(id, patientIC, patientName, doctorName, diagnosis, treatmentDetails, quantity, paymentStatus, date);
             return treatment;
         } catch (Exception e) {
             System.err.println("Error parsing treatment record: " + e.getMessage());

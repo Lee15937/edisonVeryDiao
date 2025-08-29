@@ -6,6 +6,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Objects;
 
+/**
+ *
+ * @author Ko Soon Lee
+ */
+
 public class Treatment implements Iterable<Treatment>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -21,7 +26,6 @@ public class Treatment implements Iterable<Treatment>, Serializable {
     private Date treatmentDate;
 
     public Treatment() {
-        this.treatmentDate = new Date();
     }
 
     public Treatment(String treatmentId) {
@@ -34,12 +38,11 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentDetails = treatmentDetails;
         this.quantity = quantity;
         this.paymentStatus = paymentStatus;
-        this.treatmentDate = new Date();   // current date
     }
     
     
 
-    public Treatment(String treatmentId, String patientIC, String patientName, String doctorName, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus) {
+    public Treatment(String treatmentId, String patientIC, String patientName, String doctorName, String diagnosis, String treatmentDetails, int quantity, boolean paymentStatus, Date treatmentDate) {
         this.treatmentId = treatmentId;
         this.patientIC = patientIC;
         this.patientName = patientName;
@@ -48,7 +51,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
         this.treatmentDetails = treatmentDetails;
         this.quantity = quantity;
         this.paymentStatus = paymentStatus;
-        this.treatmentDate = new Date();   // current date
+        this.treatmentDate = treatmentDate;   // current date
     }
 
     public String getTreatmentId() {
@@ -125,7 +128,7 @@ public class Treatment implements Iterable<Treatment>, Serializable {
 
     @Override
     public String toString() {
-        SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         String formattedDate = (treatmentDate != null) ? sdf.format(treatmentDate) : "N/A";
         return treatmentId + "#" + patientIC + "#" + patientName + "#" + doctorName + "#" + diagnosis + "#" + treatmentDetails + "#" + 
                 quantity + "#" + (paymentStatus ? "Pay" : "Unpay") + "#" + formattedDate;

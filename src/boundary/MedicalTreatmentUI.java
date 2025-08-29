@@ -18,7 +18,7 @@ import utility.Command;
 
 /**
  *
- * @author kosoo
+ * @author Ko Soon Lee
  */
 public class MedicalTreatmentUI {
 
@@ -173,6 +173,7 @@ public class MedicalTreatmentUI {
 
     // ===== Display Details =====
     public void displayTreatmentDetails(Treatment treatment) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
         if (treatment != null) {
             System.out.println("\n=====================================================================");
             System.out.println("Treatment Details:");
@@ -184,7 +185,7 @@ public class MedicalTreatmentUI {
             System.out.println("Treatment: " + treatment.getTreatmentDetails());
             System.out.println("Quantity: " + treatment.getQuantity());
             System.out.println("PaymentStatus: " + (treatment.getPaymentStatus() ? "Pay" : "Unpay"));
-            System.out.println("Date: " + treatment.getTreatmentDate());
+            System.out.println("Date: " + sdf.format(treatment.getTreatmentDate()));
             System.out.println("=====================================================================");
         } else {
             messageUI.displayInvalidMessage("Treatment record not found.");
@@ -194,23 +195,23 @@ public class MedicalTreatmentUI {
     // ascending & filter
     public void displayTreatmentReport(DoubleLinkedList<Treatment> treatments, String title) {
         if (treatments.sizeOf() > 0) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             Date date = new Date();
 
-            System.out.println("===============================================================================================================================================================================================");
+            System.out.println("\n===============================================================================================================================================================================================");
             System.out.println(title);
             System.out.println("Total Records: " + treatments.sizeOf());
             System.out.println("Generated On: " + sdf.format(date));
             System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s %-15s %-20s %-20s%n",
                     "TreatmentID", "Patient IC", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
             System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s %-15s %-20s %-20s%n",
                         t.getTreatmentId(),
                         t.getPatientIC(),
                         t.getPatientName(),
@@ -231,23 +232,23 @@ public class MedicalTreatmentUI {
     // descending
     public void displayTreatmentReport(ArrayList<Treatment> treatments, String title) {
         if (treatments.sizeOf() > 0) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             Date date = new Date();
 
-            System.out.println("===============================================================================================================================================================================================");
+            System.out.println("\n===============================================================================================================================================================================================");
             System.out.println(title);
             System.out.println("Total Records: " + treatments.sizeOf());
             System.out.println("Generated On: " + sdf.format(date));
             System.out.println("===============================================================================================================================================================================================");
 
-            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+            System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s %-15s %-20s %-20s%n",
                     "TreatmentID", "Patient IC", "PatientName", "DoctorName", "Diagnosis", "Treatment", "Quantity", "PaymentStatus", "Date");
 
             System.out.println("-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < treatments.sizeOf(); i++) {
                 Treatment t = treatments.get(i);
-                System.out.printf("%-12s %-20s %-20s %-20s %-5s %-20s %-20s%n",
+                System.out.printf("%-12s %-20s %-20s %-20s %-20s %-15s %-15s %-20s %-20s%n",
                         t.getTreatmentId(),
                         t.getPatientIC(),
                         t.getPatientName(),
@@ -269,7 +270,7 @@ public class MedicalTreatmentUI {
         System.out.println("Select filter option:");
         System.out.println("1. Filter by Doctor Name");
         System.out.println("2. Filter by Patient Name");
-        System.out.println("3. Last 10 Treatments");
+        System.out.println("3. Last 10 Treatments Records");
         System.out.println("4. Exit");
         System.out.print("Enter your choice (1-4): ");
         return scanner.nextLine().trim();
@@ -277,8 +278,8 @@ public class MedicalTreatmentUI {
 
     public String getSortChoice() {
         System.out.println("Select sort option:");
-        System.out.println("1. Ascending by Date");
-        System.out.println("2. Descending by Date");
+        System.out.println("1. Filter by Ascending Order");
+        System.out.println("2. Filter by Descending Order");
         System.out.print("Enter your choice (1-2): ");
         return scanner.nextLine().trim();
     }

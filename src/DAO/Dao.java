@@ -5,6 +5,11 @@ import entity.Consultation;
 import java.io.*;
 import java.util.function.Function;
 
+/**
+ *
+ * @author Ko Soon Lee
+ */
+
 public class Dao<T> {
 
     public <T> void saveToFile(DoubleLinkedList<T> list, String FILE_NAME) {
