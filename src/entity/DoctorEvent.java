@@ -7,9 +7,6 @@ package entity;
 import adt.ListInterface;
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DoctorEvent extends Doctor implements Serializable {
 
@@ -123,3 +120,4 @@ public class DoctorEvent extends Doctor implements Serializable {
         }
     }
 }
+
