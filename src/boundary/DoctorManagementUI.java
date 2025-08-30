@@ -51,11 +51,27 @@ public class DoctorManagementUI {
         while (true) {
             System.out.print("Enter Doctor Name: ");
             name = scanner.nextLine().trim();
-            if (!name.isEmpty()) {
-                return name;
+
+            if (name.matches("^[A-Za-z][A-Za-z\\s\\-']*[A-Za-z]$")) {
+                String formattedName = formatName(name);
+                return formattedName;
+            } else {
+                System.out.println("Invalid name! Use only letters, spaces, hyphens, or apostrophes (e.g., John O'Neil, Mary-Anne).");
             }
-            System.out.println("Doctor name cannot be empty.");
         }
+    }
+
+    private String formatName(String name) {
+        String[] words = name.toLowerCase().split("\\s+");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1))
+                        .append(" ");
+            }
+        }
+        return sb.toString().trim();
     }
 
     public String inputDoctorGender() {
@@ -115,16 +131,20 @@ public class DoctorManagementUI {
             schedule = scanner.nextLine().trim();
 
             if (schedule.matches(pattern1) || schedule.matches(pattern2)) {
-                String timePart = schedule.substring(schedule.indexOf(" ") + 1);
-                String[] times = timePart.split("-");
+                try {
+                    String timePart = schedule.substring(schedule.indexOf(" ") + 1);
+                    String[] times = timePart.split("-");
 
-                LocalTime start = LocalTime.parse(times[0], fmt);
-                LocalTime end = LocalTime.parse(times[1], fmt);
+                    LocalTime start = LocalTime.parse(times[0], fmt);
+                    LocalTime end = LocalTime.parse(times[1], fmt);
 
-                if (start.isBefore(end)) {
-                    return schedule;
-                } else {
-                    System.out.println("Invalid time! End time must be after start time.");
+                    if (start.isBefore(end)) {
+                        return schedule;
+                    } else {
+                        System.out.println("Invalid time! End time must be after start time.");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error parsing time. Please enter again in HH:mm format.");
                 }
             } else {
                 System.out.println("Invalid format! Please use 'Mon-Fri 09:00-17:00' or 'Mon,Wed,Fri 09:00-17:00'.");
@@ -280,8 +300,37 @@ public class DoctorManagementUI {
     }
 
     public String getShiftInput() {
-        System.out.print("Enter Shift Time (e.g., 09:00-11:00). Leave blank to finish: ");
-        return scanner.nextLine().trim();
+        String input;
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
+        String regex = "^([01]\\d|2[0-3]):[0-5]\\d-([01]\\d|2[0-3]):[0-5]\\d$";
+
+        while (true) {
+            System.out.print("Enter Shift Time (e.g., 09:00-11:00). Leave blank to finish: ");
+            input = scanner.nextLine().trim();
+
+            if (input.isEmpty()) {
+                return "";
+            }
+
+            if (!input.matches(regex)) {
+                System.out.println("X Invalid format! Please use HH:mm-HH:mm (24-hour format).");
+                continue;
+            }
+
+            try {
+                String[] times = input.split("-");
+                LocalTime start = LocalTime.parse(times[0], fmt);
+                LocalTime end = LocalTime.parse(times[1], fmt);
+
+                if (start.isBefore(end)) {
+                    return input;
+                } else {
+                    System.out.println("End time must be after start time.");
+                }
+            } catch (Exception e) {
+                System.out.println("Error parsing time. Please enter again.");
+            }
+        }
     }
 
     public LocalDate getStartDate() {
@@ -428,14 +477,25 @@ public class DoctorManagementUI {
     }
 
     public String inputEditDoctorName(String currentName) {
-        System.out.print("Enter new name (leave blank to keep '" + currentName + "'): ");
-        String newName = scanner.nextLine().trim();
-        return newName.isEmpty() ? currentName : newName;
+        while (true) {
+            System.out.print("Enter new name (leave blank to keep '" + currentName + "'): ");
+            String newName = scanner.nextLine().trim();
+
+            if (newName.isEmpty()) {
+                return currentName;
+            }
+
+            if (newName.matches("^[A-Za-z][A-Za-z\\s\\-']*[A-Za-z]$")) {
+                return formatName(newName);
+            } else {
+                System.out.println("Invalid name! Use only letters, spaces, hyphens, or apostrophes.");
+            }
+        }
     }
 
     public String inputEditDoctorPhone(String currentPhone) {
         while (true) {
-            System.out.print("Enter new phone number (10â€“15 digits) (leave blank to keep '" + currentPhone + "'): ");
+            System.out.print("Enter new phone number (10-15 digits) (leave blank to keep '" + currentPhone + "'): ");
             String newPhone = scanner.nextLine().trim();
             if (newPhone.isEmpty()) {
                 return currentPhone;
@@ -480,7 +540,7 @@ public class DoctorManagementUI {
                 try {
                     String timePart = newSchedule.substring(newSchedule.indexOf(" ") + 1);
                     String[] times = timePart.split("-");
-                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
+                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
 
                     LocalTime start = LocalTime.parse(times[0], timeFormatter);
                     LocalTime end = LocalTime.parse(times[1], timeFormatter);
@@ -506,7 +566,7 @@ public class DoctorManagementUI {
                     }
 
                     if (conflictFound) {
-                        System.out.println("â�Œ Cannot set this duty schedule because some shifts are outside the time.");
+                        System.out.println("Cannot set this duty schedule because some shifts are outside the time.");
                         continue;
                     }
 
