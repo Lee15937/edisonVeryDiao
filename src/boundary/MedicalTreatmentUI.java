@@ -40,7 +40,7 @@ public class MedicalTreatmentUI {
         System.out.println("4. Search Treatment History");
         System.out.println("5. List All Patient Treatment History");
         System.out.println("6. Filter Treatment");
-        System.out.println("7. Generate Reports");
+        System.out.println("7. Generate Summary Reports");
         System.out.println("8. Exit");
     }
 
