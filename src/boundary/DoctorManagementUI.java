@@ -108,10 +108,10 @@ public class DoctorManagementUI {
         String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* "
                 + timeRegex + "-" + timeRegex + "$";
 
-        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("H:mm");
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("HH:mm");
 
         while (true) {
-            System.out.print("Enter duty schedule (e.g., Mon-Fri 9:00-17:00 or Mon,Wed,Fri 9:00-17:00): ");
+            System.out.print("Enter duty schedule (e.g., Mon-Fri 09:00-17:00 or Mon,Wed,Fri 09:00-17:00): ");
             schedule = scanner.nextLine().trim();
 
             if (schedule.matches(pattern1) || schedule.matches(pattern2)) {
@@ -127,7 +127,7 @@ public class DoctorManagementUI {
                     System.out.println("Invalid time! End time must be after start time.");
                 }
             } else {
-                System.out.println("Invalid format! Please use 'Mon-Fri 9:00-17:00' or 'Mon,Wed,Fri 9:00-17:00'.");
+                System.out.println("Invalid format! Please use 'Mon-Fri 09:00-17:00' or 'Mon,Wed,Fri 09:00-17:00'.");
             }
         }
     }
