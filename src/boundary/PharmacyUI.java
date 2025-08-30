@@ -56,7 +56,7 @@ public class PharmacyUI {
             return;
         }
 
-        // ✅ Validation: Check if already paid
+        // Validation: Check if already paid
         if (t.getPaymentStatus()) {
             System.out.println("Treatment is complete. No further dispensing required.");
             return;
@@ -103,7 +103,7 @@ public class PharmacyUI {
 
 
     // =========================
-    // NEW FUNCTION: Sales Report
+    // Sales Report
     // =========================
     private void showSalesReport() {
         double totalSales = pharmacyCTRL.calculateTotalSales();
@@ -222,7 +222,7 @@ public class PharmacyUI {
             existing.setPrice(price);
         }
 
-        System.out.println("✅ Medicine updated successfully!");
+        System.out.println("Medicine updated successfully!");
         pharmacyCTRL.saveMedicinesToFile();
     }
 

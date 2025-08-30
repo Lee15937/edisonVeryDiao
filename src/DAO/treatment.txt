@@ -5,7 +5,7 @@ T004#050515120953#Abali#Jane#COVID-19#Paracetamol#2#Unpay#2025-09-05 11:00
 T005#050802101897#choi#Ali#Dyspepsia#Paracetamol#2#Unpay#2025-09-01 14:00
 T006#060515123456#Ali#ABu#Flu#Paracetamol#2#Unpay#2025-09-04 14:00
 T007#050515120953#Abali#Amei#Fever#Amoxicillin#1#Unpay#2025-08-30 17:00
-T008#040825010915#Soon#Ali#Flu#Paracetamol#2#Unpay#2025-08-31 15:00
+T008#040825010915#Soon#Ali#Flu#Paracetamol#2#Pay#2025-08-31 15:00
 T009#060515123456#Ali#Jane#COVID-19#Ibuprofen#1#Unpay#2025-09-02 10:00
 T010#040825010915#Soon#Joe#Flu#Amoxicillin#2#Unpay#2025-09-02 12:00
 T012#040825010915#Soon#Joe#Fever#jinitaimei#1#Unpay#2025-08-31 14:00

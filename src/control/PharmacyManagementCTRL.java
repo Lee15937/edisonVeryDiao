@@ -7,6 +7,7 @@ import entity.Medicine;
 import entity.Treatment;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.function.Function;
 
 public class PharmacyManagementCTRL {
@@ -167,11 +168,16 @@ public class PharmacyManagementCTRL {
         double total = 0;
         for (int i = 1; i <= treatments.getNumberOfEntries(); i++) {
             Treatment t = treatments.getEntry(i);
-            Medicine med = findMedicineByName(t.getTreatmentDetails());
-            if (med != null) total += med.getPrice() * t.getQuantity();
+            if (t.getPaymentStatus()) {  // only include paid treatments
+                Medicine med = findMedicineByName(t.getTreatmentDetails());
+                if (med != null) {
+                    total += med.getPrice() * t.getQuantity();
+                }
+            }
         }
         return total;
     }
+
 
     public void countPayments() {
         int paid = 0, unpaid = 0;
@@ -186,46 +192,58 @@ public class PharmacyManagementCTRL {
     }
 
     private void loadTreatmentsFromFile() {
-        File file = new File(TREATMENT_FILE);
-        if (!file.exists()) return;
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                Treatment t = fromString(line);
-                if (t != null) treatments.add(t);
+        Function<String[], Treatment> mapper = parts -> {
+            try {
+                return fromString(String.join("#", parts));
+            } catch (Exception e) {
+                System.out.println("Error parsing treatment record: " + String.join("#", parts));
+                return null;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        };
+
+        ArrayList<Treatment> loaded = dao.readTextFileAsArrayList(TREATMENT_FILE, 9, mapper);
+
+        for (int i = 0; i < loaded.sizeOf(); i++) {
+            if (loaded.get(i) != null) treatments.add(loaded.get(i));
         }
     }
 
     public void saveTreatmentsToFile() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(TREATMENT_FILE))) {
-            for (int i = 1; i <= treatments.getNumberOfEntries(); i++) {
-                bw.write(treatments.getEntry(i).toString());
-                bw.newLine();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        dao.saveToFile(treatments, TREATMENT_FILE);
     }
 
-    private Treatment fromString(String line) {
+
+    public static Treatment fromString(String line) {
         try {
             String[] parts = line.split("#");
-            if (parts.length < 7) return null;
+            if (parts.length < 9) return null;
 
             Treatment t = new Treatment();
             t.setTreatmentId(parts[0]);
-            t.setPatientName(parts[1]);
-            t.setDoctorName(parts[2]);
-            t.setDiagnosis(parts[3]);
-            t.setTreatmentPlan(parts[4]);
-            t.setQuantity(Integer.parseInt(parts[5]));
-            t.setPaymentStatus(parts[6].equalsIgnoreCase("Pay"));
+            t.setPatientIC(parts[1]);
+            t.setPatientName(parts[2]);
+            t.setDoctorName(parts[3]);
+            t.setDiagnosis(parts[4]);
+            t.setTreatmentPlan(parts[5]);
+            t.setQuantity(Integer.parseInt(parts[6]));
+            t.setPaymentStatus(parts[7].equalsIgnoreCase("Pay"));
+
+            // Parse treatment date
+            if (!parts[8].equals("N/A")) {
+                try {
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                    t.setTreatmentDate(sdf.parse(parts[8]));
+                } catch (Exception e) {
+                    t.setTreatmentDate(null);
+                }
+            }
+
             return t;
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
+
+
 }
