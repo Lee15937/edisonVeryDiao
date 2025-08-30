@@ -4,7 +4,6 @@
  */
 package boundary;
 
-import DAO.Dao;
 import adt.ArrayList;
 import adt.ListInterface;
 import control.DoctorManagement;
@@ -15,20 +14,13 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.Scanner;
 
 public class DoctorManagementUI {
 
-    ListInterface<Doctor> doctorList = new adt.ArrayList<>();
-    ListInterface<DoctorEvent> doctorEventList = new adt.ArrayList<>();
-    ListInterface<TimeRange> timeRangeList = new adt.ArrayList<>();
     Scanner scanner = new Scanner(System.in);
     public static int doctorIdCounter = 1;
     public adt.ArrayList<Doctor> doctors = new adt.ArrayList<>();
-    private Dao<Doctor> dao = new Dao<>();
-
-    public static final String DOCTOR_FILE = "src/DAO/doctor.txt";
 
     public void displayDoctorManagementMenu() {
         System.out.println("\nDoctor Management Menu:");
@@ -92,7 +84,7 @@ public class DoctorManagementUI {
             if (phoneNo.matches("\\d{10,15}")) {
                 return phoneNo;
             }
-            System.out.println("Invalid phone number. Please enter digits only (10Ã¢â‚¬â€œ15 characters).");
+            System.out.println("Invalid phone number. Please enter digits only (10-15 characters).");
         }
     }
 
@@ -202,6 +194,85 @@ public class DoctorManagementUI {
         return action;
     }
 
+    public void printDoctorListHeader() {
+        String header = String.format("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |",
+                "ID", "Name", "Gender", "Phone Number", "Email", "Availability");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printDoctorListRow(Doctor doc) {
+        System.out.printf("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
+                doc.getDoctorId(), doc.getName(), doc.getGender(),
+                doc.getPhoneNo(), doc.getEmail(),
+                doc.isAvailability() ? "Available" : "Not Available");
+    }
+
+    public void printDoctorListNoData() {
+        System.out.printf("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
+                "No Data", "", "", "", "", "");
+    }
+
+    public void printDutyScheduleHeader() {
+        String header = String.format("| %-10s | %-20s | %-25s |", "ID", "Name", "Duty Schedule");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printDutyScheduleRow(Doctor doc) {
+        System.out.printf("| %-10s | %-20s | %-25s |\n",
+                doc.getDoctorId(), doc.getName(), doc.getDutySchedule());
+    }
+
+    public void printDutyScheduleNoData() {
+        System.out.printf("| %-10s | %-20s | %-25s |\n", "No Data", "", "");
+    }
+
+    public void printShiftHeader() {
+        String header = String.format("| %-10s | %-20s | %-25s | %-25s |",
+                "ID", "Name", "Duty Schedule", "Shift");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printShiftRowFirst(Doctor d, TimeRange shift) {
+        System.out.printf("| %-10s | %-20s | %-25s | %-25s |\n",
+                d.getDoctorId(), d.getName(), d.getDutySchedule(), shift.toString());
+    }
+
+    public void printShiftRowEmpty(TimeRange shift) {
+        System.out.printf("| %-10s | %-20s | %-25s | %-25s |\n", "", "", "", shift.toString());
+    }
+
+    public void printShiftNoData() {
+        System.out.printf("| %-10s | %-20s | %-25s | %-25s |\n", "No Data", "", "", "");
+    }
+
+    public void printLeaveHeader() {
+        String header = String.format("| %-10s | %-20s | %-15s | %-15s | %-20s |",
+                "ID", "Name", "Start Date", "End Date", "Reason");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printLeaveRow(Doctor doc, DoctorEvent event) {
+        System.out.printf("| %-10s | %-20s | %-15s | %-15s | %-20s |\n",
+                doc.getDoctorId(), doc.getName(),
+                event.getLeaveStartDate(), event.getLeaveEndDate(), event.getLeaveReason());
+    }
+
+    public void printLeaveNoData() {
+        System.out.printf("| %-10s | %-20s | %-15s | %-15s | %-20s |\n", "No Data", "", "", "", "");
+    }
+
     public void trackAvailabilityMenu() {
         System.out.println("1. Assign Shift");
         System.out.println("2. Make Leave");
@@ -264,7 +335,54 @@ public class DoctorManagementUI {
         System.out.println("\nDoctor Management Summary Reports");
         System.out.println("1. Doctor Duty Schedule Summary");
         System.out.println("2. Doctor Leave Summary");
-        System.out.println("3. Back To Doctor Management Menu");
+        System.out.println("3. Doctor Availability Summary");
+        System.out.println("4. Back To Doctor Management Menu");
+    }
+
+    public void printDutyScheduleSummaryHeader() {
+        String header = String.format("|  %-3s  | %-15s |", "Day", "Doctor Quantity");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println("|    Duty Schedule Summary    |");
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printDutyScheduleSummaryRow(String day, int qty) {
+        String row = String.format("|  %-3s  | %-15d |", day, qty);
+        System.out.println(row);
+        System.out.println("=".repeat(row.length()));
+    }
+
+    public void printLeaveSummaryHeader() {
+        String header = String.format("| %-10s | %-20s | %-8s |",
+                "ID", "Name", "Quantity");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println("|           Doctor Leave Summary Report        |");
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printLeaveSummaryRow(String id, String name, int qty) {
+        String row = String.format("| %-10s | %-20s | %-8d |", id, name, qty);
+        System.out.println(row);
+    }
+
+    public void printAvailabilitySummaryHeader() {
+        String header = String.format("| %-15s | %-5s |", "Availability", "Count");
+        String line = "=".repeat(header.length());
+        System.out.println(line);
+        System.out.println(header);
+        System.out.println(line);
+    }
+
+    public void printAvailabilityRow(String availability, int count) {
+        String row = String.format("| %-15s | %-5d |\n", availability, count);
+        System.out.println(row);
+        System.out.println("=".repeat(row.length()));
     }
 
     public String getValidDoctorId() {
@@ -343,65 +461,65 @@ public class DoctorManagementUI {
         }
     }
 
-public String inputEditDoctorSchedule(String currentSchedule, Doctor doctor, ListInterface<DoctorEvent> doctorEventList) {
-    String timeRegex = "([01]?\\d|2[0-3]):[0-5]\\d";
-    String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) "
-            + timeRegex + "-" + timeRegex + "$";
-    String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* "
-            + timeRegex + "-" + timeRegex + "$";
+    public String inputEditDoctorSchedule(String currentSchedule, Doctor doctor, ListInterface<DoctorEvent> doctorEventList) {
+        String timeRegex = "([01]?\\d|2[0-3]):[0-5]\\d";
+        String pattern1 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) "
+                + timeRegex + "-" + timeRegex + "$";
+        String pattern2 = "^(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(,(Mon|Tue|Wed|Thu|Fri|Sat|Sun))* "
+                + timeRegex + "-" + timeRegex + "$";
 
-    while (true) {
-        System.out.print("Enter new duty schedule (leave blank to keep '" + currentSchedule + "'): ");
-        String newSchedule = scanner.nextLine().trim();
+        while (true) {
+            System.out.print("Enter new duty schedule (leave blank to keep '" + currentSchedule + "'): ");
+            String newSchedule = scanner.nextLine().trim();
 
-        if (newSchedule.isEmpty()) {
-            return currentSchedule;
-        }
+            if (newSchedule.isEmpty()) {
+                return currentSchedule;
+            }
 
-        if (newSchedule.matches(pattern1) || newSchedule.matches(pattern2)) {
-            try {
-                String timePart = newSchedule.substring(newSchedule.indexOf(" ") + 1);
-                String[] times = timePart.split("-");
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
+            if (newSchedule.matches(pattern1) || newSchedule.matches(pattern2)) {
+                try {
+                    String timePart = newSchedule.substring(newSchedule.indexOf(" ") + 1);
+                    String[] times = timePart.split("-");
+                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("H:mm");
 
-                LocalTime start = LocalTime.parse(times[0], timeFormatter);
-                LocalTime end = LocalTime.parse(times[1], timeFormatter);
+                    LocalTime start = LocalTime.parse(times[0], timeFormatter);
+                    LocalTime end = LocalTime.parse(times[1], timeFormatter);
 
-                if (!start.isBefore(end)) {
-                    System.out.println("XS Invalid time! End time must be after start time.");
-                    continue;
-                }
+                    if (!start.isBefore(end)) {
+                        System.out.println("X Invalid time! End time must be after start time.");
+                        continue;
+                    }
 
-                boolean conflictFound = false;
-                for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
-                    DoctorEvent shiftEvent = doctorEventList.getEntry(i);
-                    if (shiftEvent.getDoctorId().equals(doctor.getDoctorId()) && shiftEvent.isShift()) {
-                        for (int j = 1; j <= shiftEvent.getShiftRanges().getNumberOfEntries(); j++) {
-                            TimeRange tr = shiftEvent.getShiftRanges().getEntry(j);
-                            if (tr.getStart().isBefore(start) || tr.getEnd().isAfter(end)) {
-                                conflictFound = true;
-                                System.out.println(" Conflict: Shift " + tr + " does not fit inside " 
-                                                   + start + "-" + end);
+                    boolean conflictFound = false;
+                    for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
+                        DoctorEvent shiftEvent = doctorEventList.getEntry(i);
+                        if (shiftEvent.getDoctorId().equals(doctor.getDoctorId()) && shiftEvent.isShift()) {
+                            for (int j = 1; j <= shiftEvent.getShiftRanges().getNumberOfEntries(); j++) {
+                                TimeRange tr = shiftEvent.getShiftRanges().getEntry(j);
+                                if (tr.getStart().isBefore(start) || tr.getEnd().isAfter(end)) {
+                                    conflictFound = true;
+                                    System.out.println("X Conflict: Shift " + tr + " does not fit inside "
+                                            + start + "-" + end);
+                                }
                             }
                         }
                     }
+
+                    if (conflictFound) {
+                        System.out.println("â�Œ Cannot set this duty schedule because some shifts are outside the time.");
+                        continue;
+                    }
+
+                    return newSchedule;
+
+                } catch (DateTimeParseException e) {
+                    System.out.println("X Error parsing time. Please use format like 'Mon-Fri 09:00-17:00'");
                 }
-
-                if (conflictFound) {
-                    System.out.println("X Cannot set this duty schedule because some shifts are outside the time.");
-                    continue;
-                }
-
-                return newSchedule;
-
-            } catch (DateTimeParseException e) {
-                System.out.println("X Error parsing time. Please use format like 'Mon-Fri 09:00-17:00'");
+            } else {
+                System.out.println("X Invalid format. Example: 'Mon-Fri 09:00-17:00' or 'Mon,Wed,Fri 09:00-17:00'");
             }
-        } else {
-            System.out.println("X Invalid format. Example: 'Mon-Fri 09:00-17:00' or 'Mon,Wed,Fri 09:00-17:00'");
         }
     }
-}
 
     public boolean inputEditDoctorAvailability(boolean currentAvailability) {
         while (true) {

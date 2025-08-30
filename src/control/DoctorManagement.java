@@ -1,12 +1,6 @@
 package control;
 
-import entity.Doctor;
 import DAO.Dao;
-import java.util.function.Function;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.util.Date;
-import java.util.Locale;
 import adt.*;
 import boundary.DoctorManagementUI;
 import entity.Doctor;
@@ -15,7 +9,6 @@ import entity.TimeRange;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 public class DoctorManagement {
 
@@ -74,32 +67,23 @@ public class DoctorManagement {
         }
 
         ArrayList<Doctor> doctors = readDoctorFromFileAsArrayList();
-        Doctor foundDoctor = null;
+        Doctor foundDoctor = findDoctorById(doctorId);
 
-        for (Doctor d : doctors) {
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                foundDoctor = d;
-                break;
-            }
-        }
-
+        // display doctor detail
         if (foundDoctor != null) {
             doctorMgmtUI.searchDoctorDetail(foundDoctor);
 
-            for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
-                DoctorEvent event = doctorEventList.getEntry(i);
-                if (event.getDoctorId().equalsIgnoreCase(foundDoctor.getDoctorId())) {
-                    boolean firstLine = true;
-
-                    ListInterface<TimeRange> shifts = event.getShiftRanges();
-                    for (int j = 1; j <= event.getShiftRanges().getNumberOfEntries(); j++) {
-                        TimeRange tr = event.getShiftRanges().getEntry(j);
-                        if (firstLine) {
-                            System.out.println("Shift        : " + tr.toString());
-                            firstLine = false;
-                        } else {
-                            System.out.println("               " + tr.toString());
-                        }
+            DoctorEvent event = findDoctorEvent(foundDoctor.getDoctorId());
+            if (event != null) {
+                boolean firstLine = true;
+                ListInterface<TimeRange> shifts = event.getShiftRanges();
+                for (int j = 1; j <= shifts.getNumberOfEntries(); j++) {
+                    TimeRange tr = shifts.getEntry(j);
+                    if (firstLine) {
+                        System.out.println("Shift        : " + tr.toString());
+                        firstLine = false;
+                    } else {
+                        System.out.println("               " + tr.toString());
                     }
                 }
             }
@@ -135,6 +119,24 @@ public class DoctorManagement {
         return null;
     }
 
+    private Doctor reqdoctorMgmtUIreDoctor(String doctorId) {
+        Doctor doctor = findDoctorById(doctorId);
+        if (doctor == null) {
+            doctorMgmtUI.showMessage("Doctor with ID " + doctorId + " not found.");
+        }
+        return doctor;
+    }
+
+    private DoctorEvent findDoctorEvent(String doctorId) {
+        for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
+            DoctorEvent e = doctorEventList.getEntry(i);
+            if (e.getDoctorId().equalsIgnoreCase(doctorId)) {
+                return e;
+            }
+        }
+        return null;
+    }
+
     public void doctorManagementList(ListInterface<Doctor> dortorList, ListInterface<DoctorEvent> dortorEventList) {
         while (true) {
             doctorMgmtUI.doctorListMenu();
@@ -162,143 +164,82 @@ public class DoctorManagement {
     }
 
     public void displayDoctorList() {
-        String header = String.format("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |",
-                "ID", "Name", "Gender", "Phone Number", "Email", "Availability");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
-
+        doctorMgmtUI.printDoctorListHeader();
         boolean hasRows = false;
-        int availableCount = 0;
-        int notAvailableCount = 0;
 
-        ListInterface<Doctor> doctors = getAllDoctors();
-
-        for (int i = 1; i <= doctors.getNumberOfEntries(); i++) {
-            Doctor doc = doctors.getEntry(i);
-            hasRows = true;
-
-            boolean available = doc.isAvailability();
-            if (available) {
-                availableCount++;
-            } else {
-                notAvailableCount++;
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
+            Doctor doc = doctorList.getEntry(i);
+            if (doc != null) {
+                hasRows = true;
+                doctorMgmtUI.printDoctorListRow(doc);
             }
-
-            System.out.printf("| %-10s | %-20s |%-8s |%-20s |%-20s | %-25s |\n",
-                    doc.getDoctorId(), doc.getName(), doc.getGender(),
-                    doc.getPhoneNo(), doc.getEmail(),
-                    available ? "Available" : "Not Available");
         }
 
         if (!hasRows) {
-            System.out.println("| No data available |");
+            doctorMgmtUI.printDoctorListNoData();
         }
-        System.out.println(line);
     }
 
     public void displayDutyScheduleList() {
-        String header = String.format("| %-10s | %-20s | %-25s |", "ID", "Name", "Duty Schedule");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
-
+        doctorMgmtUI.printDutyScheduleHeader();
         boolean hasRows = false;
-        ListInterface<Doctor> doctors = getAllDoctors();
 
-        for (int i = 1; i <= doctors.getNumberOfEntries(); i++) {
-            Doctor doc = doctors.getEntry(i);
-            hasRows = true;
-            System.out.printf("| %-10s | %-20s | %-25s |\n", doc.getDoctorId(), doc.getName(), doc.getDutySchedule());
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
+            Doctor doc = doctorList.getEntry(i);
+            if (doc != null) {
+                hasRows = true;
+                doctorMgmtUI.printDutyScheduleRow(doc);
+            }
         }
 
         if (!hasRows) {
-            System.out.println("| No data available |");
+            doctorMgmtUI.printDutyScheduleNoData();
         }
-        System.out.println(line);
     }
 
     public void displayShiftList() {
-        String header = String.format("| %-10s | %-20s | %-25s | %-25s |", "ID", "Name", "Duty Schedule", "Shift");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
+        doctorMgmtUI.printShiftHeader();
         boolean hasData = false;
 
         for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
             Doctor d = doctorList.getEntry(i);
-            if (d == null) {
-                continue;
-            }
+            DoctorEvent event = findDoctorEvent(d.getDoctorId());
 
-            // Find doctorâ€™s events
-            DoctorEvent targetEvent = null;
-            for (int j = 1; j <= doctorEventList.getNumberOfEntries(); j++) {
-                DoctorEvent e = doctorEventList.getEntry(j);
-                if (e.getDoctorId().equalsIgnoreCase(d.getDoctorId())) {
-                    targetEvent = e;
-                    break;
-                }
-            }
-
-            if (targetEvent != null && targetEvent.getShiftRanges().getNumberOfEntries() > 0) {
+            if (event != null && event.getShiftRanges().getNumberOfEntries() > 0) {
                 hasData = true;
-                boolean firstLine = true;
-                for (int k = 1; k <= targetEvent.getShiftRanges().getNumberOfEntries(); k++) {
-                    TimeRange tr = targetEvent.getShiftRanges().getEntry(k);
-                    if (firstLine) {
-                        System.out.printf("| %-10s | %-20s | %-25s | %-25s |\n",
-                                d.getDoctorId(), d.getName(), d.getDutySchedule(), tr.toString());
-                        firstLine = false;
-                    } else {
-                        System.out.printf("| %-10s | %-20s | %-25s | %-25s |\n",
-                                "", "", "", tr.toString());
-                    }
+
+                doctorMgmtUI.printShiftRowFirst(d, event.getShiftRanges().getEntry(1));
+
+                // Print remaining shifts
+                for (int j = 2; j <= event.getShiftRanges().getNumberOfEntries(); j++) {
+                    doctorMgmtUI.printShiftRowEmpty(event.getShiftRanges().getEntry(j));
                 }
             }
         }
 
         if (!hasData) {
-            System.out.println("| No data available                                                                 |");
+            doctorMgmtUI.printShiftNoData();
         }
-
-        System.out.println(line);
     }
 
     public void displayLeaveList() {
-        String header = String.format("| %-10s | %-20s | %-15s | %-15s | %-20s |","ID", "Name", "Start Date", "End Date", "Reason");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
-
+        doctorMgmtUI.printLeaveHeader();
         boolean hasRows = false;
-        ListInterface<DoctorEvent> events = getAllDoctorEvents();
 
-        for (int i = 1; i <= events.getNumberOfEntries(); i++) {
-            DoctorEvent event = events.getEntry(i);
+        for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
+            DoctorEvent event = doctorEventList.getEntry(i);
             if (event.isLeave()) {
                 Doctor doc = findDoctorById(event.getDoctorId());
                 if (doc != null) {
                     hasRows = true;
-                    System.out.printf("| %-10s | %-20s | %-15s | %-15s | %-20s |\n",
-                            doc.getDoctorId(), doc.getName(),
-                            event.getLeaveStartDate(), event.getLeaveEndDate(), event.getLeaveReason());
+                    doctorMgmtUI.printLeaveRow(doc, event);
                 }
             }
         }
 
         if (!hasRows) {
-            System.out.println("| No data available |");
+            doctorMgmtUI.printLeaveNoData();
         }
-        System.out.println(line);
     }
 
     public void summaryReports(ListInterface<Doctor> dortorList) {
@@ -310,9 +251,12 @@ public class DoctorManagement {
                     displayDoctorDutyScheduleSummary();
                     break;
                 case 2:
-                    displayDoctorLeaveSummary(doctorList);
+                    displayDoctorLeaveSummary();
                     break;
                 case 3:
+                    displayAvailabilitySummary();
+                    break;
+                case 4:
                     System.out.println("Returning to Doctor Management Menu...");
                     return;
                 default:
@@ -344,7 +288,6 @@ public class DoctorManagement {
                     String[] range = part.split("-");
                     int start = dayIndex(range[0], days);
                     int end = dayIndex(range[1], days);
-
                     if (start != -1 && end != -1) {
                         for (int j = start; j <= end; j++) {
                             counts[j]++;
@@ -359,26 +302,37 @@ public class DoctorManagement {
             }
         }
 
-        String header = String.format("|  %-3s  | %-15s |", "Day", "Doctor Quantity");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println("|    Duty Schedule Summary    |");
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
-
-        boolean hasDuty = false;
+        doctorMgmtUI.printDutyScheduleSummaryHeader();
         for (int i = 0; i < days.length; i++) {
-            hasDuty = true;
-            System.out.printf("|  %-3s  | %-15d |\n", days[i], counts[i]);
-            System.out.println(line);
+            doctorMgmtUI.printDutyScheduleSummaryRow(days[i], counts[i]);
+        }
+    }
+
+    public void displayDoctorLeaveSummary() {
+        doctorMgmtUI.printLeaveSummaryHeader();
+
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
+            Doctor doc = doctorList.getEntry(i);
+            int qtys = getDoctorLeaveCount(doc);
+            doctorMgmtUI.printLeaveSummaryRow(doc.getDoctorId(), "Dr. " + doc.getName(), qtys);
+        }
+    }
+
+    public void displayAvailabilitySummary() {
+        int availableCount = 0, notAvailableCount = 0;
+
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
+            Doctor d = doctorList.getEntry(i);
+            if (d.isAvailability()) {
+                availableCount++;
+            } else {
+                notAvailableCount++;
+            }
         }
 
-        if (!hasDuty) {
-            System.out.println("|    No Duty Schedule found in the system.      |");
-            System.out.println(line);
-        }
+        doctorMgmtUI.printAvailabilitySummaryHeader();
+        doctorMgmtUI.printAvailabilityRow("Available", availableCount);
+        doctorMgmtUI.printAvailabilityRow("Not Available", notAvailableCount);
     }
 
     private int dayIndex(String day, String[] days) {
@@ -391,36 +345,15 @@ public class DoctorManagement {
         return -1;
     }
 
-    private void displayDoctorLeaveSummary(ListInterface<Doctor> doctorList) {
-        String header = String.format("| %-10s | %-20s | %-8s |",
-                "ID", "Name", "Quantity");
-        String line = "-".repeat(header.length());
-
-        System.out.println(line);
-        System.out.println("|           Doctor Leave Summary Report        |");
-        System.out.println(line);
-        System.out.println(header);
-        System.out.println(line);
-
-        boolean hasLeave = false;
-
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor doc = doctorList.getEntry(i);
-            int qtys = getDoctorLeaveCount(doc);
-            hasLeave = true;
-
-            String row = String.format("| %-10s | %-20s | %-8d |",
-                    doc.getDoctorId(),
-                    "Dr. " + doc.getName(),
-                    qtys);
-            System.out.println(row);
+    public int getDoctorLeaveCount(Doctor doctor) {
+        int count = 0;
+        for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
+            DoctorEvent ev = doctorEventList.getEntry(i);
+            if (ev.isLeave() && ev.getDoctorId().equalsIgnoreCase(doctor.getDoctorId())) {
+                count++;
+            }
         }
-
-        if (!hasLeave) {
-            System.out.println("|     No leave found in the system.           |");
-        }
-
-        System.out.println(line);
+        return count;
     }
 
     public void trackAvailability() {
@@ -428,18 +361,8 @@ public class DoctorManagement {
         if (doctorId == null) {
             return;
         }
-
-        Doctor selectedDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                selectedDoctor = d;
-                break;
-            }
-        }
-
+        Doctor selectedDoctor = reqdoctorMgmtUIreDoctor(doctorId);
         if (selectedDoctor == null) {
-            System.out.println("Doctor with ID " + doctorId + " not found.");
             return;
         }
 
@@ -468,19 +391,10 @@ public class DoctorManagement {
     }
 
     public void assignShift(String doctorId) {
-        Doctor targetDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                targetDoctor = d;
-                break;
-            }
-        }
+        Doctor targetDoctor = reqdoctorMgmtUIreDoctor(doctorId);
         if (targetDoctor == null) {
-            doctorMgmtUI.showMessage("Doctor not found.");
             return;
         }
-
         String name = targetDoctor.getName();
         ListInterface<TimeRange> dutyRanges = parseDutySchedule(targetDoctor.getDutySchedule());
         if (dutyRanges.isEmpty()) {
@@ -493,17 +407,10 @@ public class DoctorManagement {
             doctorMgmtUI.showMessage(" - " + dutyRanges.getEntry(i));
         }
 
-        //  Find existing DoctorEvent (reuse if exists)
-        DoctorEvent doctorEvent = null;
-        for (int j = 1; j <= doctorEventList.getNumberOfEntries(); j++) {
-            DoctorEvent e = doctorEventList.getEntry(j);
-            if (e.getDoctorId().equalsIgnoreCase(doctorId)) {
-                doctorEvent = e;
-                break;
-            }
-        }
+        // To reuse DoctorEvent if exists
+        DoctorEvent doctorEvent = findDoctorEvent(doctorId);
         if (doctorEvent == null) {
-            doctorEvent = DoctorEvent.Shift(doctorId, name, new ArrayList<>());
+            doctorEvent = DoctorEvent.Shift(doctorId, name, new adt.ArrayList<>());
             doctorEventList.add(doctorEvent);
         }
 
@@ -561,66 +468,52 @@ public class DoctorManagement {
     }
 
     public void makeLeave(String doctorId) {
-        Doctor targetDoctor = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                targetDoctor = d;
-                break;
-            }
-        }
+        Doctor targetDoctor = reqdoctorMgmtUIreDoctor(doctorId);
         if (targetDoctor == null) {
-            doctorMgmtUI.showMessage("Doctor not found.");
             return;
         }
 
         String name = targetDoctor.getName();
         LocalDate startDate = doctorMgmtUI.getStartDate();
         int days = doctorMgmtUI.getLeaveDays();
+        LocalDate endDate = startDate.plusDays(days);
         String reason = doctorMgmtUI.getReason();
 
+        // To loop less
+        DoctorEvent existingLeave = findDoctorEvent(doctorId);
+        if (existingLeave != null && existingLeave.isLeave()) {
+            LocalDate existingStart = existingLeave.getLeaveStartDate();
+            LocalDate existingEnd = existingLeave.getLeaveEndDate();
+            boolean overlap = !endDate.isBefore(existingStart) && !startDate.isAfter(existingEnd);
+            if (overlap) {
+                doctorMgmtUI.showMessage(String.format(
+                        "Doctor %s already has leave from %s to %s (Reason: %s).",
+                        name, existingStart, existingEnd, existingLeave.getLeaveReason()));
+                return;
+            }
+        }
+
+        // If no overlap, add new leave
         int qty = doctorEventList.getNumberOfEntries() + 1;
         DoctorEvent newLeave = DoctorEvent.Leave(doctorId, name, startDate, days, reason, qty);
         doctorEventList.add(newLeave);
 
-        LocalDate endDate = startDate.plusDays(days);
         doctorMgmtUI.showMessage(
                 String.format("Doctor %s is on leave from %s to %s. Reason: %s",
                         name, startDate, endDate, reason)
         );
     }
 
-    public int getDoctorLeaveCount(Doctor doctor) {
-        int count = 0;
-        for (int i = 1; i <= doctorEventList.getNumberOfEntries(); i++) {
-            DoctorEvent ev = doctorEventList.getEntry(i);
-            if (ev.isLeave() && ev.getDoctorId().equalsIgnoreCase(doctor.getDoctorId())) {
-                count++;
-            }
-        }
-        return count;
-    }
-
     public void editDoctor() {
-        String id = doctorMgmtUI.getValidDoctorId();
-        if (id == null) {
+        String doctorId = doctorMgmtUI.getValidDoctorId();
+        if (doctorId == null) {
             return;
         }
 
-        Doctor doc = null;
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(id)) {
-                doc = d;
-                break;
-            }
-        }
-
+        Doctor doc = reqdoctorMgmtUIreDoctor(doctorId);
         if (doc == null) {
-            System.out.println("Doctor not found.");
             return;
         }
-
         System.out.println("Editing Doctor: " + doc.getName() + " (" + doc.getDoctorId() + ")");
 
         doc.setName(doctorMgmtUI.inputEditDoctorName(doc.getName()));
@@ -641,20 +534,8 @@ public class DoctorManagement {
             return;
         }
 
-        Doctor doc = null;
-        int indexToRemove = -1;
-
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
-            Doctor d = doctorList.getEntry(i);
-            if (d.getDoctorId().equalsIgnoreCase(doctorId)) {
-                doc = d;
-                indexToRemove = i;
-                break;
-            }
-        }
-
+        Doctor doc = reqdoctorMgmtUIreDoctor(doctorId);
         if (doc == null) {
-            System.out.println("Doctor not found.");
             return;
         }
 
@@ -663,12 +544,23 @@ public class DoctorManagement {
             return;
         }
 
-        Doctor removed = doctorList.remove(indexToRemove);
-        if (removed != null) {
-            dao.saveToFile(doctorList, DOCTOR_FILE);
-            System.out.println("â€¦ Doctor " + doc.getName() + " removed successfully.");
-        } else {
-            System.out.println("Failed to remove doctor.");
+        // Find index to remove
+        int indexToRemove = -1;
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
+            if (doctorList.getEntry(i).getDoctorId().equalsIgnoreCase(doctorId)) {
+                indexToRemove = i;
+                break;
+            }
+        }
+
+        if (indexToRemove != -1) {
+            Doctor removed = doctorList.remove(indexToRemove);
+            if (removed != null) {
+                dao.saveToFile(doctorList, DOCTOR_FILE);
+                System.out.println("â€¦ Doctor " + doc.getName() + " removed successfully.");
+            } else {
+                System.out.println("Failed to remove doctor.");
+            }
         }
     }
 

@@ -6,9 +6,8 @@ package control;
 
 import boundary.ConsultationUI;
 import java.util.Scanner;
-import boundary.PatientRegistrationForm;
 import boundary.PharmacyUI;
-import entity.Patient;
+import utility.Utils;
 
 /**
  *
@@ -19,6 +18,7 @@ public class ClinicManagementDriver {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
+        Scanner wait = new Scanner(System.in);
         int choice;
 
         do {
@@ -66,9 +66,13 @@ public class ClinicManagementDriver {
                                 break;
                             case 5:
                                 cm.listAwaitingAppointment();
+                                Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 115);   
+                                wait.nextLine();
                                 break;
                             case 6:
                                 cm.listConsultations();
+                                Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 115);
+                                wait.nextLine();
                                 break;
                             case 7:
                                 cm.generateConsultationReport();

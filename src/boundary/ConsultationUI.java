@@ -41,7 +41,7 @@ public class ConsultationUI {
 
     public void displaySearchConsultationMenu() {
         Utils.printCenteredTitle("Search Consultation", 40);
-        System.out.println("1. Search by date and time");
+        System.out.println("1. Search by date");
         System.out.println("2. Search by Patient");
         System.out.println("3. Search by Doctor");
         System.out.println("4. Exit");
@@ -51,9 +51,10 @@ public class ConsultationUI {
     public void UpdateConsultationAppointmentMenu() {
         Utils.printCenteredTitle("Update Consultation", 40);
         System.out.println("1. Update Consultation Date and Time");
-        System.out.println("2. Check In");
-        System.out.println("3. Complete");
-        System.out.println("4. Exit");
+        System.out.println("2. Change Consultation Doctor");
+        System.out.println("3. Check In");
+        System.out.println("4. Complete");
+        System.out.println("5. Exit");
 
     }
 
@@ -141,7 +142,7 @@ public class ConsultationUI {
                 } else if (month >= 1 && month <= 12) {
                     return month;
                 } else {
-                    System.out.println("Invalid month. Please enter 1â€“12.");
+                    System.out.println("Invalid month. Please enter 1Ã¢â‚¬â€œ12.");
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Invalid input. Please enter a numeric month.");

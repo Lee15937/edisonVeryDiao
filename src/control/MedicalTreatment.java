@@ -462,7 +462,7 @@ public class MedicalTreatment {
 
     // arrayStack for descending the record
     public void listTreatmentByDescending() { // id by decending
-        ArrayStack<Treatment> treatments = readTreatmentFromFileAsArrayStack();// for decending also array stack no list
+        ArrayStack<Treatment> treatments = readTreatmentFromFileAsArrayStack();
         ArrayList<Treatment> newTreatments = new ArrayList<>();
         while (!treatments.isEmpty()) {
             newTreatments.add(treatments.pop());
@@ -670,7 +670,6 @@ public class MedicalTreatment {
         treatmentStack.clear();
     }
 
-    // updated
     private void generateSummaryReport() {
         DoubleLinkedList<Treatment> treatmentList = readTreatmentFromFileAsDLL();
 
@@ -849,5 +848,4 @@ public class MedicalTreatment {
         MedicalTreatment medicalTreatment = new MedicalTreatment();
         medicalTreatment.runTreatment();
     }
-
 }

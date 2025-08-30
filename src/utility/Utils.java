@@ -39,43 +39,43 @@ public class Utils {
             return false;
         }
     }
-
+    
+    // Get validated date from user, allow 0 to cancel
     public static String getValidatedDateFormat() {
         String date;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
         while (true) {
-            System.out.print("Enter date (YYYY-MM-DD): ");
-            date = scanner.nextLine();
+            System.out.print("Enter date (YYYY-MM-DD) or 0 to cancel: ");
+            date = scanner.nextLine().trim();
 
-            try {
-                // Try to parse user input into a LocalDate
-                LocalDate parsedDate = LocalDate.parse(date, formatter);
+            if (date.equals("0")) {
+                return null; // user canceled
+            }
 
-                // âœ… Optional: disallow past dates
-                if (parsedDate.isBefore(LocalDate.now())) {
-                    System.out.println("Date cannot be in the past. Try again.");
-                    continue;
-                }
-
-                return date; // valid date format
-            } catch (DateTimeParseException e) {
-                System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+            if (isValidDate(date)) {
+                return date; // valid date
+            } else {
+                System.out.println("Invalid date! Please enter today or a future date in format YYYY-MM-DD.");
             }
         }
     }
 
-    // Get validated time from user
+    // Get validated time from user, allow 0 to cancel
     public static String getValidatedTime() {
         String time;
-        do {
-            System.out.print("Enter time (HH:MM): ");
-            time = scanner.nextLine();
-            if (!isValidTime(time)) {
+        while (true) {
+            System.out.print("Enter time (HH:MM) or 0 to cancel: ");
+            time = scanner.nextLine().trim();
+
+            if (time.equals("0")) {
+                return null; // user canceled
+            }
+
+            if (isValidTime(time)) {
+                return time;
+            } else {
                 System.out.println("Invalid time! Please enter in HH:MM format (24-hour).");
             }
-        } while (!isValidTime(time));
-        return time;
+        }
     }
 
     public static boolean isValidTime(String time) {

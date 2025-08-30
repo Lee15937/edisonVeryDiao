@@ -29,11 +29,23 @@ public class ConsultationManagement {
     PatientRegistrationForm prf = new PatientRegistrationForm();
 
     public void addConsultation() {
-        // Delegates to validation helpers
-        String date = Utils.getValidatedDate();
-        String time = Utils.getValidatedTime();
+        Utils.printCenteredTitle("ADD CONSULTATION APOINTMENT", 60);
 
-        String ic = prf.inputPatientIC();
+        // Delegates to validation helpers
+        String date = Utils.getValidatedDateFormat();
+        if (date == null) {
+            return; // canceled
+        }
+        String time = Utils.getValidatedTime();
+        if (time == null) {
+            return; // canceled
+        }
+        System.out.print("Enter Patient IC (or 0 to cancel): ");
+        String ic = scanner.nextLine().trim();
+
+        if (ic.equals("0")) {
+            return; // canceled
+        }
         Patient patient = findPatientByIC(ic);
         if (patient == null) {
             System.out.println("Patient not found for IC: " + ic + ".\nPlease Register first.");
@@ -45,39 +57,48 @@ public class ConsultationManagement {
 //        System.out.print("Enter patient name: ");
 //        String patientName = scanner.nextLine();
 
-        ArrayList<Doctor> availableDoctors = getAvailableDoctors(date, time);
-        if (availableDoctors.isEmpty()) {
-            System.out.println("No available doctors found at the specified date/time.");
+        ArrayList<Doctor> freeDoctors = getAvailableDoctors(date, time);
+
+        if (freeDoctors.isEmpty()) {
+            System.out.println("No free doctors available at the specified date/time.");
+            Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 40);
+            scanner.nextLine();
             return;
         }
 
-        System.out.println("\nAvailable Doctors:");
+        Utils.printCenteredTitle("Available Doctors:", 30);
         System.out.printf("%-10s %-20s\n", "ID", "Name");
-        for (Doctor doc : availableDoctors) {
+        Utils.printDivider(30);
+        for (Doctor doc : freeDoctors) {
             System.out.printf("%-10s %-20s\n", doc.getDoctorId(), doc.getName());
         }
-
-        System.out.print("Enter the ID of the available doctor: ");
-        String doctorId = scanner.nextLine().trim();
-//        System.out.print("Enter doctor name: ");
-//        String doctorName = scanner.nextLine();
+        Utils.printDivider(30);
 
         Doctor selectedDoctor = null;
-        for (Doctor doc : availableDoctors) {
-            if (doc.getDoctorId().equalsIgnoreCase(doctorId)) {
-                selectedDoctor = doc;
-                break;
+        while (selectedDoctor == null) {
+            System.out.print("Enter the ID of the available doctor (or 0 to cancel): ");
+            String doctorId = scanner.nextLine().trim();
+
+            if (doctorId.equals("0")) {
+                return; // canceled
+            }
+
+            for (Doctor doc : freeDoctors) {
+                if (doc.getDoctorId().equalsIgnoreCase(doctorId)) {
+                    selectedDoctor = doc;
+                    break;
+                }
+            }
+
+            if (selectedDoctor == null) {
+                System.out.println("Invalid Doctor ID. Please try again.");
             }
         }
 
-        if (selectedDoctor == null) {
-            System.out.println("Invalid Doctor ID. Consultation not added.");
-            return;
-        }
-
+        //get the lastest consultation id
         SortedLinkedList<Consultation> cl = consultationList = readConnsultationFromFile();
-        
-        Consultation newConsultation = new Consultation(patientIC, patientName, doctorId, selectedDoctor.getName(), date, time);
+
+        Consultation newConsultation = new Consultation(patientIC, patientName, selectedDoctor.getDoctorId(), selectedDoctor.getName(), date, time);
 
         //Conflict checking before adding
 //        for (Consultation c : consultationList) {
@@ -135,39 +156,33 @@ public class ConsultationManagement {
         DoctorManagement dm = new DoctorManagement();
         ArrayList<Doctor> doctorList = dm.readDoctorFromFileAsArrayList();
 
-        Consultation requestedConsultation = new Consultation("TEMP_IC", "TEMP_PATIENT", "TEMP_DOCTORID", "TEMP_DOCTOR", date, time);
-        //Debug use only
-        //System.out.println("DEBUG: Total doctors read = " + doctorList.getNumberOfEntries());
+        // Load existing consultations (make sure this is always fresh!)
+        SortedLinkedList<Consultation> existingConsultations = readConnsultationFromFile();
 
-        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) { // check if 1 or 0 based
+        for (int i = 1; i <= doctorList.getNumberOfEntries(); i++) {
             Doctor doc = doctorList.getEntry(i);
 
-            //debug use only
-//            System.out.println("DEBUG: Read doctor -> ID: " + doc.getDoctorId()
-//                    + " | Name: " + doc.getName()
-//                    + " | Gender: " + doc.getGender()
-//                    + " | phoneNo: " + doc.getPhoneNo()
-//                    + " | Email: " + doc.getEmail()
-//                    + " | Duty: " + doc.getDutySchedule()
-//                    + " | Availability: " + doc.isAvailability());
-//            System.out.println("DEBUG: Checking doctor " + doc.getName()
-//                    + " | Duty: " + doc.getDutySchedule()
-//                    + " | Availability flag: " + doc.isAvailability());
-//
-//            //debug use only
-//            System.out.println("DEBUG: Comparing consultation date: " + localDate.getDayOfWeek());
             String dutySchedule = doc.getDutySchedule();
+
+            // Check duty day & duty time
             if (isDateWithinDutyDay(dutySchedule, localDate)
                     && isTimeWithinDutyTime(dutySchedule, consultationTime)) {
 
-                requestedConsultation.setDoctorName(doc.getName());
+                // Make a "test consultation" with this doctor
+                Consultation testConsultation = new Consultation(
+                        "TEMP_IC", "TEMP_PATIENT",
+                        doc.getDoctorId(), doc.getName(),
+                        date, time
+                );
+
                 boolean hasConflict = false;
-                for (Consultation existing : consultationList) {
-                    if (requestedConsultation.conflictsWith(existing)) {
+                for (Consultation existing : existingConsultations) {
+                    if (testConsultation.conflictsWith(existing)) {
                         hasConflict = true;
-                        System.out.println("[DEBUG] Conflict: " + doc.getName()
-                                + " already has consultation " + existing.getConsultationID()
-                                + " at " + existing.getTime());
+                        // Debug logging
+                        //System.out.println("[DEBUG] Conflict: " + doc.getName()
+                        //        + " already has consultation " + existing.getConsultationID()
+                        //        + " at " + existing.getTime());
                         break;
                     }
                 }
@@ -177,6 +192,7 @@ public class ConsultationManagement {
                 }
             }
         }
+
         return availableDoctors;
     }
 
@@ -311,7 +327,9 @@ public class ConsultationManagement {
 
         // Step 5: Display result
         if (success) {
-            System.out.println("Consultation " + id + " has been cancelled and removed.");
+            System.out.println("Consultation " + id + " has been cancelled.");
+            Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 40);
+            scanner.nextLine();
         } else {
             System.out.println("Consultation " + id + " not found or not eligible for cancellation.");
         }
@@ -323,7 +341,7 @@ public class ConsultationManagement {
             if (c.getConsultationID().equalsIgnoreCase(consultationId)
                     && c.getStatus() == Consultation.Status.SCHEDULED) {
 
-                c.setStatus(Consultation.Status.CANCELLED);  // âœ… mark cancelled
+                c.setStatus(Consultation.Status.CANCELLED);  // Ã¢Å“â€¦ mark cancelled
                 dao.updateRecordInFile(CONSUL_FILE, consultationId, 7, "CANCELLED"); // update file
                 return true;
             }
@@ -341,12 +359,15 @@ public class ConsultationManagement {
                     rescheduleConsultation();
                     break;
                 case 2:
-                    appointmentCheckin();
+                    changeDoctor();
                     break;
                 case 3:
-                    appointmentComplete();
+                    appointmentCheckin();
                     break;
                 case 4:
+                    appointmentComplete();
+                    break;
+                case 5:
                     exit = true;
                     break;
                 default:
@@ -358,31 +379,173 @@ public class ConsultationManagement {
     public void rescheduleConsultation() {
         listAwaitingAppointment();
 
-        String id = ui.getConsultationIDInput();
-        if (id.equalsIgnoreCase("0")) {
-            System.out.println("Update cancelled by user.");
-            return;
-        }
+        Consultation consultation = null;
 
-        Consultation consultation = findById(id);
-        if (consultation == null) {
-            System.out.println("Consultation not found.");
-            return;
+        while (consultation == null) {
+            String id = ui.getConsultationIDInput();
+
+            if (id.equalsIgnoreCase("0")) {
+                System.out.println("Reschedule cancelled.");
+                return;
+            }
+
+            Consultation temp = findById(id);
+
+            if (temp == null) {
+                System.out.println("Consultation not found. Please try again.");
+            } else if (temp.getStatus() != Consultation.Status.SCHEDULED) {
+                System.out.println("Only consultations with status SCHEDULED can be rescheduled. Please try again.");
+            } else {
+                consultation = temp; //valid consultation found
+            }
         }
 
         System.out.println("Current Date: " + consultation.getDate() + ", Time: " + consultation.getTime());
-        String newDate = Utils.getValidatedDate();
-        String newTime = Utils.getValidatedTime();
+
+        String newDate = null;
+        String newTime = null;
+        boolean validSlot = false;
+
+        while (!validSlot) {
+            newDate = Utils.getValidatedDateFormat();
+            if (newDate == null) { // user entered 0
+                System.out.println("Reschedule cancelled.");
+                return;
+            }
+
+            newTime = Utils.getValidatedTime();
+            if (newTime == null) { // user entered 0
+                System.out.println("Reschedule cancelled.");
+                return;
+            }
+
+            Consultation test = new Consultation(
+                    consultation.getConsultationID(),
+                    consultation.getPatientIC(),
+                    consultation.getPatientName(),
+                    consultation.getDoctorID(),
+                    consultation.getDoctorName(),
+                    newDate,
+                    newTime,
+                    Consultation.Status.SCHEDULED
+            );
+
+            //Check for conflicts
+            SortedLinkedList<Consultation> allConsultations = readConnsultationFromFile();
+            boolean hasConflict = false;
+            for (Consultation c : allConsultations) {
+                if (!c.getConsultationID().equals(consultation.getConsultationID()) // not the same one
+                        && c.getStatus() == Consultation.Status.SCHEDULED
+                        && test.conflictsWith(c)) { // use your method
+                    System.out.println("Conflict detected! Doctor already has a consultation within 15 minutes:");
+                    System.out.print("\n");
+                    Utils.printDivider(115);
+                    ui.displayConsultationHeader();
+                    System.out.println(c);
+                    Utils.printDivider(115);
+                    hasConflict = true;
+                    break;
+                }
+            }
+
+            if (!hasConflict) {
+                validSlot = true; // âœ… found a valid date/time
+            } else {
+                System.out.println("Please try another date and time, or enter 0 to cancel.");
+            }
+        }
 
         // Update the consultation details
-        consultation.setStatus(Consultation.Status.SCHEDULED);
         consultation.setDate(newDate);
         consultation.setTime(newTime);
 
-        dao.updateRecordInFile(CONSUL_FILE, id, 5, newDate);
-        dao.updateRecordInFile(CONSUL_FILE, id, 6, newTime);
+        dao.updateRecordInFile(CONSUL_FILE, consultation.getConsultationID(), 5, newDate);
+        dao.updateRecordInFile(CONSUL_FILE, consultation.getConsultationID(), 6, newTime);
 
         System.out.println("Consultation rescheduled successfully.");
+
+        Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 40);
+        scanner.nextLine();
+    }
+
+    public void changeDoctor() {
+        listAwaitingAppointment();
+        Consultation consultation = null;
+        while (consultation == null) {
+            String id = ui.getConsultationIDInput();
+            if (id.equalsIgnoreCase("0")) {
+                System.out.println("Change doctor cancelled.");
+                return;
+            }
+            Consultation temp = findById(id);
+            if (temp == null) {
+                System.out.println("Consultation not found. Please try again.");
+            } else if (temp.getStatus() != Consultation.Status.SCHEDULED) {
+                System.out.println("Only consultations with status SCHEDULED can be updated. Please try again.");
+            } else {
+                consultation = temp; // valid consultation found
+            }
+        }
+
+        //Show available doctors at the same date/time
+        ArrayList<Doctor> availableDoctors = getAvailableDoctors(
+                consultation.getDate(),
+                consultation.getTime()
+        );
+
+        if (availableDoctors.isEmpty()) {
+            System.out.println("No alternative doctors available for this date and time.");
+            return;
+        }
+
+        System.out.println("\nAvailable Doctors for " + consultation.getDate() + " at " + consultation.getTime() + ":");
+        Utils.printDivider(50);
+        System.out.printf("%-10s %-20s\n", "DoctorID", "Name");
+        Utils.printDivider(30);
+        for (Doctor doc : availableDoctors) {
+            System.out.printf("%-10s %-20s\n",
+                    doc.getDoctorId(),
+                    doc.getName());
+        }
+        Utils.printDivider(30);
+        //Show current doctor
+        System.out.println("Current Doctor: " + consultation.getDoctorName());
+
+        boolean doctorChanged = false;
+        while (!doctorChanged) {
+            System.out.print("Enter the ID of the available doctor (or 0 to cancel): ");
+            String newDoctorID = scanner.nextLine().trim();
+
+            if (newDoctorID.equalsIgnoreCase("0")) {
+                System.out.println("Change doctor cancelled.");
+                return;
+            }
+
+            // Check if the new doctor is in the available list
+            Doctor selectedDoctor = null;
+            for (Doctor doc : availableDoctors) {
+                if (doc.getDoctorId().equalsIgnoreCase(newDoctorID)) {
+                    selectedDoctor = doc;
+                    break;
+                }
+            }
+
+            if (selectedDoctor == null) {
+                System.out.println("Invalid doctor ID. Please choose from the available list or enter 0 to cancel.");
+                continue;
+            }
+
+            //Update consultation with the new doctor
+            consultation.setDoctorID(selectedDoctor.getDoctorId());
+            consultation.setDoctorName(selectedDoctor.getName());
+            dao.updateRecordInFile(CONSUL_FILE, consultation.getConsultationID(), 3, selectedDoctor.getDoctorId());
+            dao.updateRecordInFile(CONSUL_FILE, consultation.getConsultationID(), 4, selectedDoctor.getName());
+            System.out.println("Doctor changed successfully to " + selectedDoctor.getName() + ".");
+            doctorChanged = true;
+        }
+
+        Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 40);
+        scanner.nextLine();
     }
 
     public Consultation findById(String id) {
@@ -433,7 +596,7 @@ public class ConsultationManagement {
 
 // Update status to CHECKED_IN
     public boolean updateStatusToCheckIn(String consultationID) {
-        for (Consultation c : consultationList) {   // âœ… use the list's iterator
+        for (Consultation c : consultationList) {   // Ã¢Å“â€¦ use the list's iterator
             if (c.getConsultationID().equalsIgnoreCase(consultationID)) {
                 if (c.getStatus() == Consultation.Status.SCHEDULED) {
                     c.setStatus(Consultation.Status.CHECKED_IN);
@@ -470,18 +633,26 @@ public class ConsultationManagement {
 
     public void searchAppointment() {
         boolean exit = false;
-        ui.displaySearchConsultationMenu();
-        int choice = ui.getChoice();
+
         while (!exit) {
+            ui.displaySearchConsultationMenu();
+            int choice = ui.getChoice();
+
             switch (choice) {
                 case 1:
-                    searchByDateTime();
+                    searchByDate();
+                    Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 115);
+                    scanner.nextLine();
                     break;
                 case 2:
                     searchByPatient();
+                    Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 115);
+                    scanner.nextLine();
                     break;
                 case 3:
                     searchByDoctor();
+                    Utils.printCenteredTitle("CLICK ENTER TO CONTINUE", 115);
+                    scanner.nextLine();
                     break;
                 case 4:
                     exit = true;
@@ -492,16 +663,20 @@ public class ConsultationManagement {
         }
     }
 
-    private void searchByDateTime() {
-        String date = Utils.getValidatedDateFormat();
-        String time = Utils.getValidatedTime();
+    private void searchByDate() {
+        Utils.printCenteredTitle("SEARCH CONSULTATION APPOINTMENT BY DATE & TIME", 115);
 
-        Utils.printCenteredTitle("SEARCH RESULTS BY DATE & TIME", 115);
+        String date = Utils.getValidatedDateFormat();
+        if (date == null) {
+            return; // canceled
+        }
+
+        Utils.printCenteredTitle("SEARCH RESULTS BY DATE", 115);
         ui.displayConsultationHeader();
         boolean found = false;
 
         for (Consultation c : consultationList) {
-            if (c.getDate().equals(date) && c.getTime().equals(time)) {
+            if (c.getDate().equals(date)) {
                 System.out.println(c);
                 found = true;
             }
@@ -514,6 +689,8 @@ public class ConsultationManagement {
     }
 
     private void searchByPatient() {
+        Utils.printCenteredTitle("SEARCH CONSULTATION APPOINTMENT BY PATIENT", 115);
+
         System.out.print("Enter Patient IC or Name: ");
         String keyword = scanner.nextLine().trim();
 
@@ -536,6 +713,27 @@ public class ConsultationManagement {
     }
 
     private void searchByDoctor() {
+        Utils.printCenteredTitle("SEARCH CONSULTATION APPOINTMENT BY DOCTOR", 115);
+
+        DoctorManagement dm = new DoctorManagement();
+        ArrayList<Doctor> doctorList = dm.readDoctorFromFileAsArrayList();
+
+        if (doctorList.isEmpty()) {
+            System.out.println("No doctors available in the system.");
+            return;
+        }
+
+        System.out.println("Doctors List:");
+        Utils.printDivider(30);
+        System.out.printf("%-10s %-20s\n", "DoctorID", "Name");
+        Utils.printDivider(30);
+        for (Doctor doc : doctorList) {
+            System.out.printf("%-10s %-20s\n",
+                    doc.getDoctorId(),
+                    doc.getName());
+        }
+        Utils.printDivider(30);
+
         System.out.print("Enter Doctor ID or Name: ");
         String keyword = scanner.nextLine().trim();
 
@@ -560,7 +758,7 @@ public class ConsultationManagement {
     public SortedLinkedList<Consultation> readConnsultationFromFile() {
         SortedLinkedList<Consultation> list = dao.readTextFileAsSortedLinkedList(CONSUL_FILE, 8, this::parseConsultationFromParts);
 
-        // âœ… Sync Consultation ID counter with the latest from file
+        // Ã¢Å“â€¦ Sync Consultation ID counter with the latest from file
         int maxId = 1000;
         for (Consultation c : list) {
             String idStr = c.getConsultationID().substring(1); // remove "C"
@@ -581,7 +779,7 @@ public class ConsultationManagement {
     public ArrayList<Consultation> readConsultationFromFileAsArrayList() {
         ArrayList<Consultation> list = dao.readTextFileAsArrayList(CONSUL_FILE, 8, this::parseConsultationFromParts);
 
-        // âœ… Sync ID counter here too
+        // Ã¢Å“â€¦ Sync ID counter here too
         int maxId = 1000;
         for (int i = 1; i <= list.getNumberOfEntries(); i++) {
             Consultation c = list.getEntry(i);

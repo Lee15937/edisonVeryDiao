@@ -1,5 +1,10 @@
-D001#Jane#Female#0123456789#jane@gmail.com#Mon-Fri 09:00-17:00#Available
+D001#Jane#Female#0123456789#jane@gmail.com#Mon-Fri 9:00-17:00#Available
 D002#Ali#Male#0123456789#ali@gmail.com#Sun-Mon 10:00-18:00#Available
 D003#Joe#Male#0145678789#Joe@gmail.com#Sat-Tue 11:00-17:00#Not Available
 D004#ABu#Male#0185454569#abu@gmail.com#Tue-Sat 12:00-18:00#Available
 D005#Amei#Female#0185468922#mei@gmail.com#Wed-Sat 10:00-18:00#Not Available
+D006#Lee#Male#0136457894#lee@gmail.com#Mon-Sun 10:00-18:00#Available
+D007#Abu#Male#01456789144#jane@gmail.com#Sun-Tue 10:00-16:00#Not Available
+D008#John#Female#0178976855#joe@gmail.com#Tue-Fri 8:00-18:00#Available
+D009#Alibaba#Male#01134859393#alibaba@gmail.com#Sat-Fri 10:00-16:00#Available
+D0010#Ah MEI#Female#0183783733#amei@gmail.com#Sat-Mon 8:00-17:00#Not Available
