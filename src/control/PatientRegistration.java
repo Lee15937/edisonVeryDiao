@@ -33,7 +33,7 @@ public class PatientRegistration {
                 patientQueue.enqueue(patient);
             }
         }
-        System.out.println("âœ… Loaded " + patientList.getNumberOfEntries() + " patients.");
+        System.out.println("✅ Loaded " + patientList.getNumberOfEntries() + " patients.");
         if (patientList.getNumberOfEntries() > 0) {
             Patient lastPatient = patientList.getEntry(patientList.getNumberOfEntries());
             String lastId = lastPatient.getPatientId();
@@ -75,7 +75,7 @@ public class PatientRegistration {
 
     public void savePatientsToFile() {
         dao.saveToFile(patientList, PATIENT_FILE);
-        System.out.println("âœ… Patient data saved.");
+        System.out.println("✅ Patient data saved.");
     }
 
     public void runPatientManagement() {
