@@ -61,7 +61,7 @@ public class ConsultationUI {
     public void generateConsultationAppointmentMenu() {
         Utils.printCenteredTitle("Generate Consultation Appointment Summary Report", 50);
         System.out.println("1. Yearly Summary Report");
-        System.out.println("2. Monthy Summary Report On Each Day");
+        System.out.println("2. Monthly Summary Report On Each Day");
         System.out.println("3. Exit");
 
     }
