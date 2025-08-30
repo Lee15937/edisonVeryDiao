@@ -100,15 +100,7 @@ public class ConsultationManagement {
 
         Consultation newConsultation = new Consultation(patientIC, patientName, selectedDoctor.getDoctorId(), selectedDoctor.getName(), date, time);
 
-        //Conflict checking before adding
-//        for (Consultation c : consultationList) {
-//            if (newConsultation.conflictsWith(c)) {
-//                System.out.println("Cannot schedule. Conflict with: \n");
-//                ui.displayConsultationHeader();
-//                System.out.println(c);
-//                return; // exit without adding
-//            }
-//        }
+
         boolean added = consultationList.add(newConsultation);
 
         if (added) {
@@ -341,7 +333,7 @@ public class ConsultationManagement {
             if (c.getConsultationID().equalsIgnoreCase(consultationId)
                     && c.getStatus() == Consultation.Status.SCHEDULED) {
 
-                c.setStatus(Consultation.Status.CANCELLED);  // Ã¢Å“â€¦ mark cancelled
+                c.setStatus(Consultation.Status.CANCELLED);  //mark cancelled
                 dao.updateRecordInFile(CONSUL_FILE, consultationId, 7, "CANCELLED"); // update file
                 return true;
             }
@@ -449,7 +441,7 @@ public class ConsultationManagement {
             }
 
             if (!hasConflict) {
-                validSlot = true; // âœ… found a valid date/time
+                validSlot = true; //found a valid date/time
             } else {
                 System.out.println("Please try another date and time, or enter 0 to cancel.");
             }
@@ -596,7 +588,7 @@ public class ConsultationManagement {
 
 // Update status to CHECKED_IN
     public boolean updateStatusToCheckIn(String consultationID) {
-        for (Consultation c : consultationList) {   // Ã¢Å“â€¦ use the list's iterator
+        for (Consultation c : consultationList) {   //use the list's iterator
             if (c.getConsultationID().equalsIgnoreCase(consultationID)) {
                 if (c.getStatus() == Consultation.Status.SCHEDULED) {
                     c.setStatus(Consultation.Status.CHECKED_IN);
@@ -758,7 +750,7 @@ public class ConsultationManagement {
     public SortedLinkedList<Consultation> readConnsultationFromFile() {
         SortedLinkedList<Consultation> list = dao.readTextFileAsSortedLinkedList(CONSUL_FILE, 8, this::parseConsultationFromParts);
 
-        // Ã¢Å“â€¦ Sync Consultation ID counter with the latest from file
+        //Sync Consultation ID counter with the latest from file
         int maxId = 1000;
         for (Consultation c : list) {
             String idStr = c.getConsultationID().substring(1); // remove "C"
@@ -779,7 +771,7 @@ public class ConsultationManagement {
     public ArrayList<Consultation> readConsultationFromFileAsArrayList() {
         ArrayList<Consultation> list = dao.readTextFileAsArrayList(CONSUL_FILE, 8, this::parseConsultationFromParts);
 
-        // Ã¢Å“â€¦ Sync ID counter here too
+        //Sync ID counter here too
         int maxId = 1000;
         for (int i = 1; i <= list.getNumberOfEntries(); i++) {
             Consultation c = list.getEntry(i);
