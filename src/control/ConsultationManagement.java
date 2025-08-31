@@ -1,3 +1,4 @@
+
 package control;
 
 import adt.SortedLinkedList;
@@ -441,7 +442,7 @@ public class ConsultationManagement {
             }
 
             if (!hasConflict) {
-                validSlot = true; // found a valid date/time
+                validSlot = true; //found a valid date/time
             } else {
                 System.out.println("Please try another date and time, or enter 0 to cancel.");
             }
