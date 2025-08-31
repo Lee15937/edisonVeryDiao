@@ -34,10 +34,10 @@ public class ClinicManagementDriver {
             System.out.print("Enter your choice (1-6): ");
 
             choice = scanner.nextInt();
-
+            PatientRegistration patientManagement = new PatientRegistration();
+            
             switch (choice) {
-                case 1:
-                    PatientRegistration patientManagement = new PatientRegistration();
+                case 1:               
                     patientManagement.runPatientManagement();
                     break;
                 case 2:

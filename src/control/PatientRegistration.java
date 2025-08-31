@@ -15,7 +15,8 @@ public class PatientRegistration {
     private Dao<Patient> dao = new Dao<>();
     private PatientRegistrationForm form = new PatientRegistrationForm();
     public static final String PATIENT_FILE = "src/DAO/patient.txt";
-
+    private boolean patientsLoaded = false;
+    
     public QueueInterface<Patient> getPatientQueue() {
         return patientQueue;
     }
@@ -25,7 +26,13 @@ public class PatientRegistration {
     }
 
     public void loadPatientsFromFile() {
+        if (patientsLoaded) return;
+
         ArrayList<Patient> loadedPatients = dao.readTextFileAsArrayList(PATIENT_FILE, 6, this::patientMapper);
+
+        patientList.clear();
+        patientQueue.clear();
+
         for (int i = 0; i < loadedPatients.sizeOf(); i++) {
             Patient patient = loadedPatients.get(i);
             if (patient != null) {
@@ -33,13 +40,17 @@ public class PatientRegistration {
                 patientQueue.enqueue(patient);
             }
         }
+
         System.out.println("✅ Loaded " + patientList.getNumberOfEntries() + " patients.");
+
         if (patientList.getNumberOfEntries() > 0) {
             Patient lastPatient = patientList.getEntry(patientList.getNumberOfEntries());
             String lastId = lastPatient.getPatientId();
             int lastNum = Integer.parseInt(lastId.substring(1));
             Patient.setCounter(lastNum + 1);
         }
+
+        patientsLoaded = true;
     }
 
     public Patient patientMapper(String[] parts) {

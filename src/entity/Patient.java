@@ -31,7 +31,11 @@ public class Patient implements Iterable<Patient>, Serializable {
     }
 
     public Patient(String patientId, String IC, String name, String gender, int age, String phoneNo) {
-        this.patientId = Patient.generateNewId();
+        if (patientId == null || patientId.trim().isEmpty()) {
+            this.patientId = Patient.generateNewId();
+        } else {
+            this.patientId = patientId;
+        }
         this.IC = IC;
         this.name = name;
         this.gender = gender;
