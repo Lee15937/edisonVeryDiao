@@ -157,9 +157,9 @@ public class ConsultationManagement {
 
             String dutySchedule = doc.getDutySchedule();
 
-            // Check duty day & duty time
-            if (isDateWithinDutyDay(dutySchedule, localDate)
-                    && isTimeWithinDutyTime(dutySchedule, consultationTime)) {
+            // Check Availability, duty day & duty time
+            if (doc.isAvailability() && isDateWithinDutyDay(dutySchedule, localDate)
+                    && isTimeWithinDutyTime(dutySchedule, consultationTime))  {
 
                 // Make a "test consultation" with this doctor
                 Consultation testConsultation = new Consultation(
